@@ -1,15 +1,15 @@
 package dev.xkmc.l2serial.serialization.generic_types;
 
-import dev.xkmc.l2serial.serialization.unified_processor.UnifiedContext;
 import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
+import dev.xkmc.l2serial.serialization.unified_processor.UnifiedContext;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings({"unchecked", "unsafe", "rawtypes"})
 public class EnumCodec extends GenericCodec {
 
 	@Override
-	public boolean predicate(TypeInfo cls, @Nullable Object obj) {
-		return cls.getAsClass().isEnum();
+	public boolean predicate(Class<?> cls) {
+		return cls.isEnum();
 	}
 
 	@Override

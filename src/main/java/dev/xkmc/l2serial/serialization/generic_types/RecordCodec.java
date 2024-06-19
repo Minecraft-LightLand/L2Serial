@@ -11,8 +11,8 @@ import java.lang.reflect.Field;
 public class RecordCodec extends GenericCodec {
 
 	@Override
-	public boolean predicate(TypeInfo cls, @Nullable Object obj) {
-		return cls.getAsClass().isRecord() || cls.getAsClass() == Record.class;
+	public boolean predicate(Class<?> cls) {
+		return cls.isRecord() || cls == Record.class;
 	}
 
 	@Override

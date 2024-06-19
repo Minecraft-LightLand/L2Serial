@@ -2,7 +2,8 @@ package dev.xkmc.l2serial.serialization.unified_processor;
 
 import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
-import dev.xkmc.l2serial.serialization.SerialClass;
+import dev.xkmc.l2serial.serialization.marker.SerialField;
+import dev.xkmc.l2serial.serialization.generic_types.HolderCodecReg;
 import dev.xkmc.l2serial.serialization.type_cache.ClassCache;
 import dev.xkmc.l2serial.serialization.type_cache.FieldCache;
 import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
@@ -22,12 +23,16 @@ public abstract class UnifiedContext<E, O, A> {
 
 	public abstract E serializeSpecial(Class<?> cls, Object obj);
 
+	public abstract Object deserializeCodec(HolderCodecReg<?> cls, E e);
+
+	public abstract E serializeCodec(HolderCodecReg<?> cls, Object e);
+
 	/**
 	 * Optional.empty() : normal
 	 * Optional.of(Either.left(...)) : fast return
 	 * Optional.of(Either.right(...)) : class override
 	 */
-	public abstract Optional<Either<Optional<Object>, TypeInfo>> fetchRealClass(@Nullable  E obj, TypeInfo def) throws Exception;
+	public abstract Optional<Either<Optional<Object>, TypeInfo>> fetchRealClass(@Nullable E obj, TypeInfo def) throws Exception;
 
 	/**
 	 * Optional.empty() : normal
@@ -116,6 +121,6 @@ public abstract class UnifiedContext<E, O, A> {
 
 	public abstract E fromString(String str);
 
-	public abstract boolean shouldWrite(SerialClass.SerialField sf);
+	public abstract boolean shouldWrite(SerialField sf);
 
 }

@@ -2,27 +2,28 @@ package dev.xkmc.l2serial.serialization.unified_processor;
 
 import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
-import dev.xkmc.l2serial.serialization.SerialClass;
+import dev.xkmc.l2serial.serialization.marker.SerialField;
 import dev.xkmc.l2serial.serialization.custom_handler.Handlers;
+import dev.xkmc.l2serial.serialization.generic_types.HolderCodecReg;
 import dev.xkmc.l2serial.serialization.type_cache.ClassCache;
 import dev.xkmc.l2serial.serialization.type_cache.FieldCache;
 import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
 import dev.xkmc.l2serial.util.Wrappers;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-public class PacketContext extends SingletonContext<FriendlyByteBuf> {
-	private final Predicate<SerialClass.SerialField> pred;
+public class PacketContext extends SingletonContext<RegistryFriendlyByteBuf> {
+	private final Predicate<SerialField> pred;
 
-	public PacketContext(FriendlyByteBuf instance, Predicate<SerialClass.SerialField> pred) {
+	public PacketContext(RegistryFriendlyByteBuf instance, Predicate<SerialField> pred) {
 		super(instance);
 		this.pred = pred;
 	}
 
-	public PacketContext(FriendlyByteBuf instance) {
+	public PacketContext(RegistryFriendlyByteBuf instance) {
 		this(instance, e -> true);
 	}
 
@@ -32,18 +33,29 @@ public class PacketContext extends SingletonContext<FriendlyByteBuf> {
 	}
 
 	@Override
-	public Object deserializeSpecial(Class<?> cls, FriendlyByteBuf self) {
+	public Object deserializeSpecial(Class<?> cls, RegistryFriendlyByteBuf self) {
 		return Handlers.PACKET_MAP.get(cls).fromPacket(instance);
 	}
 
 	@Override
-	public FriendlyByteBuf serializeSpecial(Class<?> cls, Object obj) {
+	public RegistryFriendlyByteBuf serializeSpecial(Class<?> cls, Object obj) {
 		Handlers.PACKET_MAP.get(cls).toPacket(instance, obj);
 		return instance;
 	}
 
 	@Override
-	public Optional<Either<Optional<Object>, TypeInfo>> fetchRealClass(@Nullable FriendlyByteBuf obj, TypeInfo cls) throws Exception {
+	public Object deserializeCodec(HolderCodecReg<?> cls, RegistryFriendlyByteBuf buf) {
+		return cls.stream().decode(instance);
+	}
+
+	@Override
+	public RegistryFriendlyByteBuf serializeCodec(HolderCodecReg<?> cls, Object e) {
+		cls.stream().encode(instance, Wrappers.cast(e));
+		return instance;
+	}
+
+	@Override
+	public Optional<Either<Optional<Object>, TypeInfo>> fetchRealClass(@Nullable RegistryFriendlyByteBuf obj, TypeInfo cls) throws Exception {
 		byte header = instance.readByte();
 		if (header == 0) {
 			return Optional.of(Either.left(Optional.empty()));
@@ -53,12 +65,12 @@ public class PacketContext extends SingletonContext<FriendlyByteBuf> {
 	}
 
 	@Override
-	public Optional<Pair<FriendlyByteBuf, Optional<ClassCache>>> writeRealClass(TypeInfo cls, @Nullable Object obj) throws Exception {
+	public Optional<Pair<RegistryFriendlyByteBuf, Optional<ClassCache>>> writeRealClass(TypeInfo cls, @Nullable Object obj) throws Exception {
 		if (obj == null) {
 			instance.writeByte(0);
 			return Optional.of(Pair.of(instance, Optional.empty()));
 		}
-		Optional<Wrappers.ExcSup<FriendlyByteBuf>> special = UnifiedCodec.serializeSpecial(this, cls, obj);
+		Optional<Wrappers.ExcSup<RegistryFriendlyByteBuf>> special = UnifiedCodec.serializeSpecial(this, cls, obj);
 		if (special.isPresent()) {
 			instance.writeByte(1);
 			return Optional.of(Pair.of(special.get().get(), Optional.empty()));
@@ -76,33 +88,33 @@ public class PacketContext extends SingletonContext<FriendlyByteBuf> {
 	}
 
 	@Override
-	public boolean shouldRead(FriendlyByteBuf obj, FieldCache field) throws Exception {
+	public boolean shouldRead(RegistryFriendlyByteBuf obj, FieldCache field) throws Exception {
 		return pred.test(field.getSerialAnnotation());
 	}
 
 	@Override
-	public boolean shouldWrite(SerialClass.SerialField sf) {
+	public boolean shouldWrite(SerialField sf) {
 		return pred.test(sf);
 	}
 
 	@Override
-	public int getSize(FriendlyByteBuf self) {
+	public int getSize(RegistryFriendlyByteBuf self) {
 		return instance.readInt();
 	}
 
 	@Override
-	public String getAsString(FriendlyByteBuf self) {
+	public String getAsString(RegistryFriendlyByteBuf self) {
 		return instance.readUtf();
 	}
 
 	@Override
-	public FriendlyByteBuf createList(int size) {
+	public RegistryFriendlyByteBuf createList(int size) {
 		instance.writeInt(size);
 		return instance;
 	}
 
 	@Override
-	public FriendlyByteBuf fromString(String str) {
+	public RegistryFriendlyByteBuf fromString(String str) {
 		instance.writeUtf(str);
 		return instance;
 	}

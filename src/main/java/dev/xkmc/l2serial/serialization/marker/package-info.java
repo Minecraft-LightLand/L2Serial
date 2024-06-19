@@ -1,7 +1,7 @@
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 
-package dev.xkmc.l2serial.serialization;
+package dev.xkmc.l2serial.serialization.marker;
 
 import net.minecraft.MethodsReturnNonnullByDefault;
 

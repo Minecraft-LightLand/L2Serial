@@ -1,6 +1,6 @@
 package dev.xkmc.l2serial.serialization.type_cache;
 
-import dev.xkmc.l2serial.serialization.SerialClass;
+import dev.xkmc.l2serial.serialization.marker.SerialClass;
 import dev.xkmc.l2serial.util.LazyExc;
 
 import javax.annotation.Nullable;

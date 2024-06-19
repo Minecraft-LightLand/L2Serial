@@ -1,9 +1,9 @@
 package dev.xkmc.l2serial.serialization.generic_types;
 
 import dev.xkmc.l2serial.serialization.codec.AliasCollection;
+import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
 import dev.xkmc.l2serial.serialization.unified_processor.UnifiedCodec;
 import dev.xkmc.l2serial.serialization.unified_processor.UnifiedContext;
-import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -12,8 +12,8 @@ import java.util.List;
 public class AliasCodec extends GenericCodec {
 
 	@Override
-	public boolean predicate(TypeInfo cls, @Nullable Object obj) {
-		return obj instanceof AliasCollection<?>;
+	public boolean predicate(Class<?> cls) {
+		return AliasCollection.class.isAssignableFrom(cls);
 	}
 
 	@Override

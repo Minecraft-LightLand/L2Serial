@@ -8,13 +8,12 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.JsonOps;
 import dev.xkmc.l2serial.util.Wrappers;
-import io.netty.buffer.Unpooled;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 
-import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.function.UnaryOperator;
 
@@ -70,10 +69,8 @@ public record CodecAdaptor<T>(Class<T> cls, UnaryOperator<T> validator) implemen
 		return DataResult.error(() -> "Unknown ops type " + ops.getClass().getSimpleName());
 	}
 
-	public Codec<T> toNetwork() {
-		return Codec.BYTE_BUFFER.xmap(
-				e -> PacketCodec.from(new FriendlyByteBuf(Unpooled.wrappedBuffer(e)), cls, null),
-				e -> ByteBuffer.wrap(PacketCodec.toBytes(e, cls, x -> true)));
+	public <B extends RegistryFriendlyByteBuf> StreamCodec<B, T> toNetwork() {
+		return StreamCodec.of(PacketCodec::to, (b) -> Objects.requireNonNull(PacketCodec.from(b, cls, null)));
 	}
 
 }

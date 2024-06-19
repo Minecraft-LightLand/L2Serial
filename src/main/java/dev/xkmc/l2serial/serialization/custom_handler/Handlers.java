@@ -7,13 +7,20 @@ import dev.xkmc.l2serial.serialization.nulldefer.NullDefer;
 import dev.xkmc.l2serial.serialization.nulldefer.PrimitiveNullDefer;
 import dev.xkmc.l2serial.serialization.nulldefer.SimpleNullDefer;
 import dev.xkmc.l2serial.util.Wrappers;
+import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.MappedRegistry;
+import net.minecraft.core.HolderSet;
 import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryCodecs;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.*;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.resources.RegistryFixedCodec;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EntityType;
@@ -26,15 +33,18 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.registries.RegistryManager;
 
 import java.util.*;
-import java.util.function.Supplier;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Handlers {
 
 	public static final Map<Class<?>, JsonClassHandler<?>> JSON_MAP = new HashMap<>();
 	public static final Map<Class<?>, NBTClassHandler<?, ?>> NBT_MAP = new HashMap<>();
 	public static final Map<Class<?>, PacketClassHandler<?>> PACKET_MAP = new HashMap<>();
+
+	private static final Map<Class<?>, HolderReg<?>> REGMAP = new ConcurrentHashMap<>();
 
 	public static final List<GenericCodec> LIST = new ArrayList<>();
 	public static final Map<Class<?>, NullDefer<?>> MAP = new HashMap<>();
@@ -46,7 +56,7 @@ public class Handlers {
 		new ClassHandler<>(long.class, JsonPrimitive::new, JsonElement::getAsLong, FriendlyByteBuf::readLong, FriendlyByteBuf::writeLong, LongTag::getAsLong, LongTag::valueOf, Long.class);
 		new ClassHandler<>(int.class, JsonPrimitive::new, JsonElement::getAsInt, FriendlyByteBuf::readInt, FriendlyByteBuf::writeInt, IntTag::getAsInt, IntTag::valueOf, Integer.class);
 		new ClassHandler<ShortTag, Short>(short.class, JsonPrimitive::new, JsonElement::getAsShort, FriendlyByteBuf::readShort, FriendlyByteBuf::writeShort, ShortTag::getAsShort, ShortTag::valueOf, Short.class);
-		new ClassHandler<ByteTag, Byte>(byte.class, JsonPrimitive::new, JsonElement::getAsByte, FriendlyByteBuf::readByte, FriendlyByteBuf::writeByte, ByteTag::getAsByte, ByteTag::valueOf, Byte.class);
+		new ClassHandler<>(byte.class, JsonPrimitive::new, JsonElement::getAsByte, FriendlyByteBuf::readByte, FriendlyByteBuf::writeByte, ByteTag::getAsByte, ByteTag::valueOf, Byte.class);
 		new ClassHandler<ByteTag, Boolean>(boolean.class, JsonPrimitive::new, JsonElement::getAsBoolean, FriendlyByteBuf::readBoolean, FriendlyByteBuf::writeBoolean, tag -> tag.getAsByte() != 0, ByteTag::valueOf, Boolean.class);
 		new ClassHandler<ByteTag, Character>(char.class, JsonPrimitive::new, JsonElement::getAsCharacter, FriendlyByteBuf::readChar, FriendlyByteBuf::writeChar, t -> (char) t.getAsByte(), c -> ByteTag.valueOf((byte) (char) c), Character.class);
 		new ClassHandler<>(double.class, JsonPrimitive::new, JsonElement::getAsDouble, FriendlyByteBuf::readDouble, FriendlyByteBuf::writeDouble, DoubleTag::getAsDouble, DoubleTag::valueOf, Double.class);
@@ -55,32 +65,26 @@ public class Handlers {
 		new ClassHandler<>(String.class, JsonPrimitive::new, JsonElement::getAsString, FriendlyByteBuf::readUtf, FriendlyByteBuf::writeUtf, Tag::getAsString, StringTag::valueOf);
 
 		// minecraft
-		new ClassHandler<>(ItemStack.class, StackHelper::serializeItemStack, StackHelper::deserializeItemStack, FriendlyByteBuf::readItem, FriendlyByteBuf::writeItem, ItemStack::of, is -> is.save(new CompoundTag()));
-		new ClassHandler<>(FluidStack.class, StackHelper::serializeFluidStack, StackHelper::deserializeFluidStack, FluidStack::readFromPacket, FriendlyByteBuf::writeFluidStack, FluidStack::loadFluidStackFromNBT, f -> f.writeToNBT(new CompoundTag()));
-
-		new StringClassHandler<>(ResourceLocation.class, ResourceLocation::new, ResourceLocation::toString);
+		new StringClassHandler<>(ResourceLocation.class, ResourceLocation::parse, ResourceLocation::toString);
 		new StringClassHandler<>(UUID.class, UUID::fromString, UUID::toString);
 
-		// partials
-
-		// no NBT
-		new ClassHandler<>(Ingredient.class, StackHelper::serializeIngredient,
-				e -> e.isJsonArray() && e.getAsJsonArray().isEmpty() ? Ingredient.EMPTY : Ingredient.fromJson(e, false),
-				Ingredient::fromNetwork, (p, o) -> o.toNetwork(p), null, null);
+		new CodecHandler<>(ItemStack.class, ItemStack.CODEC, ItemStack.OPTIONAL_STREAM_CODEC);
+		new CodecHandler<>(FluidStack.class, FluidStack.CODEC, FluidStack.OPTIONAL_STREAM_CODEC);
+		new CodecHandler<>(Ingredient.class, Ingredient.CODEC, Ingredient.CONTENTS_STREAM_CODEC);
+		new CodecHandler<>(MobEffectInstance.class, MobEffectInstance.CODEC, MobEffectInstance.STREAM_CODEC);
 
 		// no JSON
-		new ClassHandler<CompoundTag, CompoundTag>(CompoundTag.class, null, null, FriendlyByteBuf::readNbt, FriendlyByteBuf::writeNbt, e -> e, e -> e);
-		new ClassHandler<ListTag, ListTag>(ListTag.class, null, null, buf -> (ListTag) buf.readNbt().get("warp"), (buf, tag) -> {
-			CompoundTag comp = new CompoundTag();
-			comp.put("warp", tag);
-			buf.writeNbt(comp);
-		}, e -> e, e -> e);
+		new ClassHandler<CompoundTag, CompoundTag>(CompoundTag.class, null, null, f -> f.readNbt(), (f, b) -> f.writeNbt(b), e -> e, e -> e);
+		new ClassHandler<ListTag, ListTag>(ListTag.class, null, null, buf -> (ListTag) buf.readNbt().get("warp"),
+				(buf, tag) -> buf.writeNbt(Util.make(new CompoundTag(), e -> e.put("wrap", tag))), e -> e, e -> e);
 
 		new ClassHandler<>(long[].class, null, null, FriendlyByteBuf::readLongArray, FriendlyByteBuf::writeLongArray, LongArrayTag::getAsLongArray, LongArrayTag::new);
 		new ClassHandler<>(int[].class, null, null, FriendlyByteBuf::readVarIntArray, FriendlyByteBuf::writeVarIntArray, IntArrayTag::getAsIntArray, IntArrayTag::new);
-		new ClassHandler<>(byte[].class, null, null, FriendlyByteBuf::readByteArray, FriendlyByteBuf::writeByteArray, ByteArrayTag::getAsByteArray, ByteArrayTag::new);
+		new ClassHandler<>(byte[].class, null, null, f -> f.readByteArray(), (f, b) -> f.writeByteArray(b), ByteArrayTag::getAsByteArray, ByteArrayTag::new);
 
-		new AutoPacketNBTHandler<>(BlockPos.class,
+		new ClassHandler<CompoundTag, BlockPos>(BlockPos.class, null, null,
+				p -> p.readBlockPos(),
+				(p, b) -> p.writeBlockPos(b),
 				tag -> new BlockPos(tag.getInt("x"), tag.getInt("y"), tag.getInt("z")),
 				obj -> {
 					CompoundTag tag = new CompoundTag();
@@ -89,7 +93,9 @@ public class Handlers {
 					tag.putInt("z", obj.getZ());
 					return tag;
 				});
-		new AutoPacketNBTHandler<>(Vec3.class,
+		new ClassHandler<CompoundTag, Vec3>(Vec3.class, null, null,
+				FriendlyByteBuf::readVec3,
+				FriendlyByteBuf::writeVec3,
 				tag -> new Vec3(tag.getDouble("x"), tag.getDouble("y"), tag.getDouble("z")),
 				obj -> {
 					CompoundTag tag = new CompoundTag();
@@ -98,8 +104,6 @@ public class Handlers {
 					tag.putDouble("z", obj.z());
 					return tag;
 				});
-		new AutoPacketNBTHandler<>(MobEffectInstance.class,
-				MobEffectInstance::load, e -> e.save(new CompoundTag()));
 	}
 
 	// register generic codec
@@ -111,6 +115,8 @@ public class Handlers {
 		new ListCodec();
 		new SetCodec();
 		new MapCodec();
+		new HolderCodec();
+		new HolderSetCodec();
 	}
 
 	// register null defer
@@ -135,46 +141,46 @@ public class Handlers {
 		new PrimitiveNullDefer<>(boolean.class, false);
 	}
 
-	private static final Set<Registry<?>> VANILLA_SYNC_REGISTRIES;
 
-	static {
-		VANILLA_SYNC_REGISTRIES = Set.of(
-				BuiltInRegistries.SOUND_EVENT, // Required for SoundEvent packets
-				BuiltInRegistries.MOB_EFFECT, // Required for MobEffect packets
-				BuiltInRegistries.BLOCK, // Required for chunk BlockState paletted containers syncing
-				BuiltInRegistries.ENCHANTMENT, // Required for EnchantmentMenu syncing
-				BuiltInRegistries.ENTITY_TYPE, // Required for Entity spawn packets
-				BuiltInRegistries.ITEM, // Required for Item/ItemStack packets
-				BuiltInRegistries.PARTICLE_TYPE, // Required for ParticleType packets
-				BuiltInRegistries.BLOCK_ENTITY_TYPE, // Required for BlockEntity packets
-				BuiltInRegistries.PAINTING_VARIANT, // Required for EntityDataSerializers
-				BuiltInRegistries.MENU, // Required for ClientboundOpenScreenPacket
-				BuiltInRegistries.COMMAND_ARGUMENT_TYPE, // Required for ClientboundCommandsPacket
-				BuiltInRegistries.STAT_TYPE, // Required for ClientboundAwardStatsPacket
-				BuiltInRegistries.VILLAGER_TYPE, // Required for EntityDataSerializers
-				BuiltInRegistries.VILLAGER_PROFESSION, // Required for EntityDataSerializers
-				BuiltInRegistries.CAT_VARIANT, // Required for EntityDataSerializers
-				BuiltInRegistries.FROG_VARIANT // Required for EntityDataSerializers
-		);
+	private static <T> void registerReg(Class<T> cls, HolderReg<T> reg) {
+		REGMAP.put(cls, reg);
 	}
 
-	public static <T> void enableVanilla(Class<T> cls, Supplier<Registry<T>> reg) {
-		if (VANILLA_SYNC_REGISTRIES.contains(reg.get()) &&
-				reg.get() instanceof MappedRegistry<T> mapped) {
-			new RLClassHandler<>(cls, mapped);
+	public static <T> void registerReg(Class<T> cls, ResourceKey<? extends Registry<T>> reg) {
+		registerReg(cls, new HolderReg<>(new HolderCodecReg<>(
+				RegistryFixedCodec.create(reg),
+				ByteBufCodecs.holderRegistry(reg)
+		), new HolderCodecReg<>(
+				RegistryCodecs.homogeneousList(reg),
+				ByteBufCodecs.holderSet(reg)
+		)));
+	}
+
+	public static <T> HolderReg<T> getReg(Class<T> cls) {
+		return Wrappers.cast(REGMAP.get(cls));
+	}
+
+	public static <T> void enableVanilla(Class<T> cls, Registry<T> reg) {
+		registerReg(cls, reg.key());
+		if (RegistryManager.isNonSyncedBuiltInRegistry(reg)) {
+			new CodecHandler<>(cls, reg.byNameCodec(),
+					ByteBufCodecs.fromCodecWithRegistries(reg.byNameCodec()));
 		} else {
-			new StringRLClassHandler<>(cls, reg);
+			new CodecHandler<>(cls, reg.byNameCodec(),
+					ByteBufCodecs.registry(reg.key()));
 		}
 	}
 
 	static {
-		enableVanilla(Item.class, () -> BuiltInRegistries.ITEM);
-		enableVanilla(Block.class, () -> BuiltInRegistries.BLOCK);
-		enableVanilla(Potion.class, () -> BuiltInRegistries.POTION);
-		enableVanilla(Enchantment.class, () -> BuiltInRegistries.ENCHANTMENT);
-		enableVanilla(MobEffect.class, () -> BuiltInRegistries.MOB_EFFECT);
-		enableVanilla(Attribute.class, () -> BuiltInRegistries.ATTRIBUTE);
-		enableVanilla(Wrappers.cast(EntityType.class), () -> BuiltInRegistries.ENTITY_TYPE);
+		enableVanilla(Item.class, BuiltInRegistries.ITEM);
+		enableVanilla(Block.class, BuiltInRegistries.BLOCK);
+		enableVanilla(Potion.class, BuiltInRegistries.POTION);
+		enableVanilla(MobEffect.class, BuiltInRegistries.MOB_EFFECT);
+		enableVanilla(Attribute.class, BuiltInRegistries.ATTRIBUTE);
+		enableVanilla(Wrappers.cast(EntityType.class), BuiltInRegistries.ENTITY_TYPE);
+
+		registerReg(Enchantment.class, Registries.ENCHANTMENT);
+		registerReg(DamageType.class, Registries.DAMAGE_TYPE);
 	}
 
 	public static void register() {

@@ -1,6 +1,6 @@
 package dev.xkmc.l2serial.serialization.codec;
 
-import dev.xkmc.l2serial.serialization.SerialClass;
+import dev.xkmc.l2serial.serialization.marker.SerialField;
 import dev.xkmc.l2serial.serialization.type_cache.ClassCache;
 import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
 import dev.xkmc.l2serial.serialization.unified_processor.TagContext;
@@ -41,7 +41,7 @@ public class TagCodec {
 	 * */
 	@Nullable
 	@SuppressWarnings("unchecked")
-	public static <T> T fromTag(CompoundTag tag, Class<?> cls, @Nullable T obj, Predicate<SerialClass.SerialField> pred) {
+	public static <T> T fromTag(CompoundTag tag, Class<?> cls, @Nullable T obj, Predicate<SerialField> pred) {
 		return (T) Wrappers.get(() -> UnifiedCodec.deserializeObject(new TagContext(pred), tag, ClassCache.get(cls), obj));
 	}
 
@@ -80,7 +80,7 @@ public class TagCodec {
 	 * @return the <code>tag</code> provided
 	 * */
 	@Nullable
-	public static CompoundTag toTag(CompoundTag tag, Class<?> cls, Object obj, Predicate<SerialClass.SerialField> pred) {
+	public static CompoundTag toTag(CompoundTag tag, Class<?> cls, Object obj, Predicate<SerialField> pred) {
 		return Wrappers.get(() -> UnifiedCodec.serializeObject(new TagContext(pred), tag, ClassCache.get(cls), obj));
 	}
 
@@ -93,7 +93,7 @@ public class TagCodec {
 	 * */
 	@Nullable
 	@SuppressWarnings("unchecked")
-	public static <T> T valueFromTag(Tag tag, Class<?> cls, Predicate<SerialClass.SerialField> pred) {
+	public static <T> T valueFromTag(Tag tag, Class<?> cls, Predicate<SerialField> pred) {
 		return (T) Wrappers.get(() -> UnifiedCodec.deserializeValue(new TagContext(pred), tag, TypeInfo.of(cls), null));
 	}
 
@@ -105,7 +105,7 @@ public class TagCodec {
 	 * @return a <code>Tag</code> representing the value
 	 * */
 	@Nullable
-	public static Tag valueToTag(Class<?> cls, Object obj, Predicate<SerialClass.SerialField> pred) {
+	public static Tag valueToTag(Class<?> cls, Object obj, Predicate<SerialField> pred) {
 		return Wrappers.get(() -> UnifiedCodec.serializeValue(new TagContext(pred), TypeInfo.of(cls), obj));
 	}
 

@@ -1,6 +1,6 @@
 package dev.xkmc.l2serial.serialization.type_cache;
 
-import dev.xkmc.l2serial.serialization.SerialClass;
+import dev.xkmc.l2serial.serialization.marker.SerialField;
 import dev.xkmc.l2serial.util.Wrappers;
 
 import javax.annotation.Nullable;
@@ -32,8 +32,8 @@ public class FieldCache {
 	}
 
 	@Nullable
-	public SerialClass.SerialField getSerialAnnotation() throws Exception {
-		return getAnnotation(SerialClass.SerialField.class);
+	public SerialField getSerialAnnotation() throws Exception {
+		return getAnnotation(SerialField.class);
 	}
 
 	public String getName() {

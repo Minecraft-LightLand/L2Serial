@@ -11,7 +11,7 @@ import java.lang.reflect.Array;
 public class ArrayCodec extends GenericCodec {
 
 	@Override
-	public boolean predicate(TypeInfo cls, @Nullable Object obj) {
+	public boolean predicate(Class<?> cls) {
 		return cls.isArray();
 	}
 

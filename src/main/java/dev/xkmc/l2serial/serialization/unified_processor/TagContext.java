@@ -2,10 +2,13 @@ package dev.xkmc.l2serial.serialization.unified_processor;
 
 import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
-import dev.xkmc.l2serial.serialization.SerialClass;
+import dev.xkmc.l2serial.serialization.marker.SerialField;
+import dev.xkmc.l2serial.serialization.custom_handler.CodecHandler;
 import dev.xkmc.l2serial.serialization.custom_handler.Handlers;
+import dev.xkmc.l2serial.serialization.generic_types.HolderCodecReg;
 import dev.xkmc.l2serial.serialization.type_cache.FieldCache;
 import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
+import dev.xkmc.l2serial.util.Wrappers;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
@@ -24,9 +27,9 @@ public class TagContext extends TreeContext<Tag, CompoundTag, ListTag> {
 		NULL.putBoolean("_null", true);
 	}
 
-	private final Predicate<SerialClass.SerialField> pred;
+	private final Predicate<SerialField> pred;
 
-	public TagContext(Predicate<SerialClass.SerialField> pred) {
+	public TagContext(Predicate<SerialField> pred) {
 		super(Optional.of(Pair.of(NULL, Optional.empty())));
 		this.pred = pred;
 	}
@@ -79,6 +82,16 @@ public class TagContext extends TreeContext<Tag, CompoundTag, ListTag> {
 	@Override
 	public Tag serializeSpecial(Class<?> cls, Object obj) {
 		return Handlers.NBT_MAP.get(cls).toTag(obj);
+	}
+
+	@Override
+	public Object deserializeCodec(HolderCodecReg<?> cls, Tag e) {
+		return cls.codec().decode(CodecHandler.nbt(), e).getOrThrow().getFirst();
+	}
+
+	@Override
+	public Tag serializeCodec(HolderCodecReg<?> cls, Object e) {
+		return cls.codec().encodeStart(CodecHandler.nbt(), Wrappers.cast(e)).getOrThrow();
 	}
 
 	@Override
@@ -158,8 +171,8 @@ public class TagContext extends TreeContext<Tag, CompoundTag, ListTag> {
 	}
 
 	@Override
-	public boolean shouldWrite(SerialClass.SerialField sf) {
+	public boolean shouldWrite(SerialField sf) {
 		return pred.test(sf);
 	}
-	
+
 }

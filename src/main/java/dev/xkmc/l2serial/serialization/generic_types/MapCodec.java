@@ -1,9 +1,9 @@
 package dev.xkmc.l2serial.serialization.generic_types;
 
 import com.mojang.datafixers.util.Pair;
+import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
 import dev.xkmc.l2serial.serialization.unified_processor.UnifiedCodec;
 import dev.xkmc.l2serial.serialization.unified_processor.UnifiedContext;
-import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -14,8 +14,8 @@ import java.util.Map;
 public class MapCodec extends GenericCodec {
 
 	@Override
-	public boolean predicate(TypeInfo cls, @Nullable Object obj) {
-		return Map.class.isAssignableFrom(cls.getAsClass());
+	public boolean predicate(Class<?> cls) {
+		return Map.class.isAssignableFrom(cls);
 	}
 
 	@Override

@@ -1,7 +1,6 @@
 package dev.xkmc.l2serial.serialization.unified_processor;
 
 import dev.xkmc.l2serial.serialization.generic_types.GenericCodec;
-import dev.xkmc.l2serial.serialization.custom_handler.Handlers;
 import dev.xkmc.l2serial.serialization.nulldefer.NullDefer;
 import dev.xkmc.l2serial.serialization.type_cache.ClassCache;
 import dev.xkmc.l2serial.serialization.type_cache.FieldCache;
@@ -65,10 +64,9 @@ public class UnifiedCodec {
 			if (ctx.hasSpecialHandling(cls.getAsClass())) {
 				return ctx.deserializeSpecial(cls.getAsClass(), e);
 			}
-			for (GenericCodec codec : Handlers.LIST) {
-				if (codec.predicate(cls, ans)) {
-					return codec.deserializeValue(ctx, e, cls, ans);
-				}
+			GenericCodec codec = GenericCodec.find(cls, ans);
+			if (codec != null) {
+				return codec.deserializeValue(ctx, e, cls, ans);
 			}
 		}
 		return deserializeObject(ctx, ctx.castAsMap(e), cls.toCache(), ans);
@@ -188,10 +186,9 @@ public class UnifiedCodec {
 		if (ctx.hasSpecialHandling(cls.getAsClass())) {
 			return Optional.of(() -> ctx.serializeSpecial(cls.getAsClass(), obj));
 		}
-		for (GenericCodec codec : Handlers.LIST) {
-			if (codec.predicate(cls, obj)) {
-				return Optional.of(() -> codec.serializeValue(ctx, cls, obj));
-			}
+		GenericCodec codec = GenericCodec.find(cls, obj);
+		if (codec != null) {
+			return Optional.of(() -> codec.serializeValue(ctx, cls, obj));
 		}
 		return Optional.empty();
 	}

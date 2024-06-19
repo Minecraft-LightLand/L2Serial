@@ -1,8 +1,8 @@
 package dev.xkmc.l2serial.serialization.generic_types;
 
+import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
 import dev.xkmc.l2serial.serialization.unified_processor.UnifiedCodec;
 import dev.xkmc.l2serial.serialization.unified_processor.UnifiedContext;
-import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -11,8 +11,8 @@ import java.util.List;
 public class ListCodec extends GenericCodec {
 
 	@Override
-	public boolean predicate(TypeInfo cls, @Nullable Object obj) {
-		return List.class.isAssignableFrom(cls.getAsClass());
+	public boolean predicate(Class<?> cls) {
+		return List.class.isAssignableFrom(cls);
 	}
 
 	@Override

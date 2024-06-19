@@ -1,8 +1,8 @@
 package dev.xkmc.l2serial.serialization.generic_types;
 
+import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
 import dev.xkmc.l2serial.serialization.unified_processor.UnifiedCodec;
 import dev.xkmc.l2serial.serialization.unified_processor.UnifiedContext;
-import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
@@ -11,8 +11,8 @@ import java.util.Set;
 public class SetCodec extends GenericCodec {
 
 	@Override
-	public boolean predicate(TypeInfo cls, @Nullable Object obj) {
-		return Set.class.isAssignableFrom(cls.getAsClass());
+	public boolean predicate(Class<?> cls) {
+		return Set.class.isAssignableFrom(cls);
 	}
 
 	@Override

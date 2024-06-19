@@ -3,6 +3,7 @@ package dev.xkmc.l2serial.serialization.custom_handler;
 import com.google.gson.JsonElement;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNullableByDefault;
@@ -14,19 +15,21 @@ public class ClassHandler<R extends Tag, T> implements JsonClassHandler<T>, NBTC
 
 	public final Function<Object, JsonElement> toJson;
 	public final Function<JsonElement, ?> fromJson;
-	public final Function<FriendlyByteBuf, ?> fromPacket;
-	public final BiConsumer<FriendlyByteBuf, Object> toPacket;
+	public final Function<RegistryFriendlyByteBuf, ?> fromPacket;
+	public final BiConsumer<RegistryFriendlyByteBuf, Object> toPacket;
 	public final Function<Tag, ?> fromTag;
 	public final Function<Object, Tag> toTag;
 
 	@SuppressWarnings("unchecked")
 	@ParametersAreNullableByDefault
-	public ClassHandler(@Nonnull Class<T> cls, Function<T, JsonElement> tj, Function<JsonElement, T> fj, Function<FriendlyByteBuf, T> fp,
-						BiConsumer<FriendlyByteBuf, T> tp, Function<R, T> ft, Function<T, Tag> tt, @Nonnull Class<?>... others) {
+	public ClassHandler(@Nonnull Class<T> cls,
+						Function<T, JsonElement> tj, Function<JsonElement, T> fj,
+						Function<RegistryFriendlyByteBuf, T> fp, BiConsumer<RegistryFriendlyByteBuf, T> tp,
+						Function<R, T> ft, Function<T, Tag> tt, @Nonnull Class<?>... others) {
 		this.toJson = (Function<Object, JsonElement>) tj;
 		this.fromJson = fj;
 		this.fromPacket = fp;
-		this.toPacket = (BiConsumer<FriendlyByteBuf, Object>) tp;
+		this.toPacket = (BiConsumer<RegistryFriendlyByteBuf, Object>) tp;
 		fromTag = (Function<Tag, ?>) ft;
 		toTag = (Function<Object, Tag>) tt;
 		put(cls);
@@ -61,12 +64,12 @@ public class ClassHandler<R extends Tag, T> implements JsonClassHandler<T>, NBTC
 	}
 
 	@Override
-	public void toPacket(FriendlyByteBuf buf, Object obj) {
+	public void toPacket(RegistryFriendlyByteBuf buf, Object obj) {
 		toPacket.accept(buf, obj);
 	}
 
 	@Override
-	public T fromPacket(FriendlyByteBuf buf) {
+	public T fromPacket(RegistryFriendlyByteBuf buf) {
 		return (T) fromPacket.apply(buf);
 	}
 }

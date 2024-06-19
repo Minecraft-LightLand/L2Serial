@@ -3,10 +3,13 @@ package dev.xkmc.l2serial.serialization.unified_processor;
 import com.google.gson.*;
 import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
-import dev.xkmc.l2serial.serialization.SerialClass;
+import dev.xkmc.l2serial.serialization.marker.SerialField;
+import dev.xkmc.l2serial.serialization.custom_handler.CodecHandler;
 import dev.xkmc.l2serial.serialization.custom_handler.Handlers;
+import dev.xkmc.l2serial.serialization.generic_types.HolderCodecReg;
 import dev.xkmc.l2serial.serialization.type_cache.FieldCache;
 import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
+import dev.xkmc.l2serial.util.Wrappers;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -31,6 +34,16 @@ public class JsonContext extends TreeContext<JsonElement, JsonObject, JsonArray>
 	@Override
 	public JsonElement serializeSpecial(Class<?> cls, Object obj) {
 		return Handlers.JSON_MAP.get(cls).toJson(obj);
+	}
+
+	@Override
+	public Object deserializeCodec(HolderCodecReg<?> cls, JsonElement e) {
+		return cls.codec().decode(CodecHandler.json(), e).getOrThrow().getFirst();
+	}
+
+	@Override
+	public JsonElement serializeCodec(HolderCodecReg<?> cls, Object e) {
+		return cls.codec().encodeStart(CodecHandler.json(), Wrappers.cast(e)).getOrThrow();
 	}
 
 	@Override
@@ -137,7 +150,7 @@ public class JsonContext extends TreeContext<JsonElement, JsonObject, JsonArray>
 	}
 
 	@Override
-	public boolean shouldWrite(SerialClass.SerialField sf) {
+	public boolean shouldWrite(SerialField sf) {
 		return true;
 	}
 }
