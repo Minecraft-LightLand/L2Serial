@@ -4,7 +4,7 @@ import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
 import dev.xkmc.l2serial.serialization.marker.SerialField;
 import dev.xkmc.l2serial.serialization.custom_handler.Handlers;
-import dev.xkmc.l2serial.serialization.generic_types.HolderCodecReg;
+import dev.xkmc.l2serial.serialization.generic_types.CodecReg;
 import dev.xkmc.l2serial.serialization.type_cache.ClassCache;
 import dev.xkmc.l2serial.serialization.type_cache.FieldCache;
 import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
@@ -44,12 +44,12 @@ public class PacketContext extends SingletonContext<RegistryFriendlyByteBuf> {
 	}
 
 	@Override
-	public Object deserializeCodec(HolderCodecReg<?> cls, RegistryFriendlyByteBuf buf) {
+	public Object deserializeCodec(CodecReg<?> cls, RegistryFriendlyByteBuf buf) {
 		return cls.stream().decode(instance);
 	}
 
 	@Override
-	public RegistryFriendlyByteBuf serializeCodec(HolderCodecReg<?> cls, Object e) {
+	public RegistryFriendlyByteBuf serializeCodec(CodecReg<?> cls, Object e) {
 		cls.stream().encode(instance, Wrappers.cast(e));
 		return instance;
 	}

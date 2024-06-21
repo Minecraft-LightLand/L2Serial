@@ -3,13 +3,16 @@ package dev.xkmc.l2serial.serialization.unified_processor;
 import com.google.gson.*;
 import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
-import dev.xkmc.l2serial.serialization.marker.SerialField;
-import dev.xkmc.l2serial.serialization.custom_handler.CodecHandler;
+import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.JsonOps;
 import dev.xkmc.l2serial.serialization.custom_handler.Handlers;
-import dev.xkmc.l2serial.serialization.generic_types.HolderCodecReg;
+import dev.xkmc.l2serial.serialization.generic_types.CodecReg;
+import dev.xkmc.l2serial.serialization.marker.SerialField;
 import dev.xkmc.l2serial.serialization.type_cache.FieldCache;
 import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
 import dev.xkmc.l2serial.util.Wrappers;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.resources.RegistryOps;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -17,8 +20,12 @@ import java.util.Optional;
 
 public class JsonContext extends TreeContext<JsonElement, JsonObject, JsonArray> {
 
-	public JsonContext() {
-		super(Optional.of(Pair.of(JsonNull.INSTANCE, Optional.empty())));
+	public JsonContext(HolderLookup.Provider access) {
+		this(RegistryOps.create(JsonOps.INSTANCE, access));
+	}
+
+	public JsonContext(DynamicOps<JsonElement> ops) {
+		super(Optional.of(Pair.of(JsonNull.INSTANCE, Optional.empty())), ops);
 	}
 
 	@Override
@@ -37,13 +44,13 @@ public class JsonContext extends TreeContext<JsonElement, JsonObject, JsonArray>
 	}
 
 	@Override
-	public Object deserializeCodec(HolderCodecReg<?> cls, JsonElement e) {
-		return cls.codec().decode(CodecHandler.json(), e).getOrThrow().getFirst();
+	public Object deserializeCodec(CodecReg<?> cls, JsonElement e) {
+		return cls.codec().decode(ops(), e).getOrThrow().getFirst();
 	}
 
 	@Override
-	public JsonElement serializeCodec(HolderCodecReg<?> cls, Object e) {
-		return cls.codec().encodeStart(CodecHandler.json(), Wrappers.cast(e)).getOrThrow();
+	public JsonElement serializeCodec(CodecReg<?> cls, Object e) {
+		return cls.codec().encodeStart(ops(), Wrappers.cast(e)).getOrThrow();
 	}
 
 	@Override

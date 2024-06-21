@@ -9,7 +9,6 @@ import dev.xkmc.l2serial.serialization.nulldefer.SimpleNullDefer;
 import dev.xkmc.l2serial.util.Wrappers;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderSet;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryCodecs;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -43,6 +42,7 @@ public class Handlers {
 	public static final Map<Class<?>, JsonClassHandler<?>> JSON_MAP = new HashMap<>();
 	public static final Map<Class<?>, NBTClassHandler<?, ?>> NBT_MAP = new HashMap<>();
 	public static final Map<Class<?>, PacketClassHandler<?>> PACKET_MAP = new HashMap<>();
+	public static final Map<Class<?>, CodecReg<?>> CODEC_MAP = new HashMap<>();
 
 	private static final Map<Class<?>, HolderReg<?>> REGMAP = new ConcurrentHashMap<>();
 
@@ -147,10 +147,10 @@ public class Handlers {
 	}
 
 	public static <T> void registerReg(Class<T> cls, ResourceKey<? extends Registry<T>> reg) {
-		registerReg(cls, new HolderReg<>(new HolderCodecReg<>(
+		registerReg(cls, new HolderReg<>(new CodecReg<>(
 				RegistryFixedCodec.create(reg),
 				ByteBufCodecs.holderRegistry(reg)
-		), new HolderCodecReg<>(
+		), new CodecReg<>(
 				RegistryCodecs.homogeneousList(reg),
 				ByteBufCodecs.holderSet(reg)
 		)));

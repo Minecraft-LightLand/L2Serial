@@ -3,7 +3,7 @@ package dev.xkmc.l2serial.serialization.unified_processor;
 import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
 import dev.xkmc.l2serial.serialization.marker.SerialField;
-import dev.xkmc.l2serial.serialization.generic_types.HolderCodecReg;
+import dev.xkmc.l2serial.serialization.generic_types.CodecReg;
 import dev.xkmc.l2serial.serialization.type_cache.ClassCache;
 import dev.xkmc.l2serial.serialization.type_cache.FieldCache;
 import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
@@ -23,9 +23,9 @@ public abstract class UnifiedContext<E, O, A> {
 
 	public abstract E serializeSpecial(Class<?> cls, Object obj);
 
-	public abstract Object deserializeCodec(HolderCodecReg<?> cls, E e);
+	public abstract Object deserializeCodec(CodecReg<?> cls, E e);
 
-	public abstract E serializeCodec(HolderCodecReg<?> cls, Object e);
+	public abstract E serializeCodec(CodecReg<?> cls, Object e);
 
 	/**
 	 * Optional.empty() : normal

@@ -7,11 +7,18 @@ import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
 import dev.xkmc.l2serial.serialization.unified_processor.JsonContext;
 import dev.xkmc.l2serial.serialization.unified_processor.UnifiedCodec;
 import dev.xkmc.l2serial.util.Wrappers;
+import net.minecraft.core.HolderLookup;
 
 import javax.annotation.Nullable;
 
 @SuppressWarnings({"unused"})
 public class JsonCodec {
+
+	private final HolderLookup.Provider access;
+
+	public JsonCodec(HolderLookup.Provider access) {
+		this.access = access;
+	}
 
 	/**
 	 * The data must not represent a null object.
@@ -24,8 +31,8 @@ public class JsonCodec {
 	 */
 	@Nullable
 	@SuppressWarnings("unchecked")
-	public static <T> T from(JsonElement obj, Class<T> cls, @Nullable T ans) {
-		return Wrappers.get(() -> (T) UnifiedCodec.deserializeValue(new JsonContext(), obj, TypeInfo.of(cls), ans));
+	public <T> T from(JsonElement obj, Class<T> cls, @Nullable T ans) {
+		return Wrappers.get(() -> (T) UnifiedCodec.deserializeValue(new JsonContext(access), obj, TypeInfo.of(cls), ans));
 	}
 
 	/**
@@ -35,8 +42,8 @@ public class JsonCodec {
 	 * @return The serialized json, or null if failed.
 	 */
 	@Nullable
-	public static <T> JsonElement toJson(T obj) {
-		return Wrappers.get(() -> UnifiedCodec.serializeValue(new JsonContext(), TypeInfo.of(obj.getClass()), obj));
+	public <T> JsonElement toJson(T obj) {
+		return Wrappers.get(() -> UnifiedCodec.serializeValue(new JsonContext(access), TypeInfo.of(obj.getClass()), obj));
 	}
 
 	/**
@@ -45,8 +52,8 @@ public class JsonCodec {
 	 * @return The serialized json, or null if failed.
 	 */
 	@Nullable
-	public static <T extends R, R> JsonElement toJson(T obj, Class<R> cls) {
-		return Wrappers.get(() -> UnifiedCodec.serializeValue(new JsonContext(), TypeInfo.of(cls), obj));
+	public <T extends R, R> JsonElement toJson(T obj, Class<R> cls) {
+		return Wrappers.get(() -> UnifiedCodec.serializeValue(new JsonContext(access), TypeInfo.of(cls), obj));
 	}
 
 	/**
@@ -58,8 +65,8 @@ public class JsonCodec {
 	 * @return The same <code>JsonObject</code> as <code>input</code>
 	 * */
 	@Nullable
-	public static <T> JsonObject toJsonObject(T obj, JsonObject input) {
-		return Wrappers.get(() -> UnifiedCodec.serializeObject(new JsonContext(), input, ClassCache.get(obj.getClass()), obj));
+	public <T> JsonObject toJsonObject(T obj, JsonObject input) {
+		return Wrappers.get(() -> UnifiedCodec.serializeObject(new JsonContext(access), input, ClassCache.get(obj.getClass()), obj));
 	}
 
 }

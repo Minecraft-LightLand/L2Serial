@@ -2,17 +2,16 @@ package dev.xkmc.l2serial.serialization.unified_processor;
 
 import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
-import dev.xkmc.l2serial.serialization.marker.SerialField;
-import dev.xkmc.l2serial.serialization.custom_handler.CodecHandler;
+import com.mojang.serialization.DynamicOps;
 import dev.xkmc.l2serial.serialization.custom_handler.Handlers;
-import dev.xkmc.l2serial.serialization.generic_types.HolderCodecReg;
+import dev.xkmc.l2serial.serialization.generic_types.CodecReg;
+import dev.xkmc.l2serial.serialization.marker.SerialField;
 import dev.xkmc.l2serial.serialization.type_cache.FieldCache;
 import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
 import dev.xkmc.l2serial.util.Wrappers;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.StringTag;
-import net.minecraft.nbt.Tag;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.*;
+import net.minecraft.resources.RegistryOps;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -29,9 +28,13 @@ public class TagContext extends TreeContext<Tag, CompoundTag, ListTag> {
 
 	private final Predicate<SerialField> pred;
 
-	public TagContext(Predicate<SerialField> pred) {
-		super(Optional.of(Pair.of(NULL, Optional.empty())));
+	public TagContext(DynamicOps<Tag> ops, Predicate<SerialField> pred) {
+		super(Optional.of(Pair.of(NULL, Optional.empty())), ops);
 		this.pred = pred;
+	}
+
+	public TagContext(HolderLookup.Provider access, Predicate<SerialField> pred) {
+		this(RegistryOps.create(NbtOps.INSTANCE, access), pred);
 	}
 
 	@Override
@@ -85,13 +88,13 @@ public class TagContext extends TreeContext<Tag, CompoundTag, ListTag> {
 	}
 
 	@Override
-	public Object deserializeCodec(HolderCodecReg<?> cls, Tag e) {
-		return cls.codec().decode(CodecHandler.nbt(), e).getOrThrow().getFirst();
+	public Object deserializeCodec(CodecReg<?> cls, Tag e) {
+		return cls.codec().decode(ops(), e).getOrThrow().getFirst();
 	}
 
 	@Override
-	public Tag serializeCodec(HolderCodecReg<?> cls, Object e) {
-		return cls.codec().encodeStart(CodecHandler.nbt(), Wrappers.cast(e)).getOrThrow();
+	public Tag serializeCodec(CodecReg<?> cls, Object e) {
+		return cls.codec().encodeStart(ops(), Wrappers.cast(e)).getOrThrow();
 	}
 
 	@Override

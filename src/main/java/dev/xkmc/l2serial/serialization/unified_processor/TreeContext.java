@@ -1,9 +1,12 @@
 package dev.xkmc.l2serial.serialization.unified_processor;
 
 import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.DynamicOps;
 import dev.xkmc.l2serial.serialization.type_cache.ClassCache;
 import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
 import dev.xkmc.l2serial.util.Wrappers;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.resources.RegistryOps;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
@@ -12,11 +15,16 @@ import java.util.Optional;
 public abstract class TreeContext<E, O extends E, A extends E> extends UnifiedContext<E, O, A> {
 
 	private final Optional<Pair<E, Optional<ClassCache>>> nil;
+	private final DynamicOps<E> ops;
 
-	protected TreeContext(Optional<Pair<E, Optional<ClassCache>>> nil) {
+	protected TreeContext(Optional<Pair<E, Optional<ClassCache>>> nil, DynamicOps<E> ops) {
 		this.nil = nil;
+		this.ops = ops;
 	}
 
+	protected DynamicOps<E> ops() {
+		return ops;
+	}
 
 	@Override
 	public E getKeyOfEntry(O obj) {
