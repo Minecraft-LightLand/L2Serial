@@ -11,11 +11,14 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
+import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.neoforged.neoforge.network.handling.IPayloadHandler;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -23,6 +26,8 @@ import java.util.function.Function;
 
 @SuppressWarnings("unused")
 public class PacketHandler {
+
+	public static final Logger LOGGER = LogManager.getLogger();
 
 	public enum NetDir {
 		PLAY_TO_CLIENT,
@@ -53,6 +58,13 @@ public class PacketHandler {
 		ver = version;
 		verStr = String.valueOf(ver);
 		this.values = values;
+
+		var cont = ModLoadingContext.get().getActiveContainer();
+		if (!cont.getModId().equals(id))
+			throw new IllegalStateException("Class Initialized from wrong thread for " + id);
+		var bus = cont.getEventBus();
+		if (bus != null) bus.addListener(this::register);
+		else throw new IllegalStateException("Event bus is null for " + id);
 	}
 
 	private ResourceLocation of(Class<?> cls) {
@@ -113,7 +125,7 @@ public class PacketHandler {
 		PacketDistributor.sendToPlayersNear(world, null, pos.getX(), pos.getY(), pos.getZ(), range, get(packet));
 	}
 
-	public void register(RegisterPayloadHandlersEvent event) {
+	private void register(RegisterPayloadHandlersEvent event) {
 		var reg = event.registrar(modid).versioned(verStr).optional();
 		for (var packet : values) {
 			var config = packet.apply(this);
@@ -123,10 +135,10 @@ public class PacketHandler {
 	}
 
 	public record PacketConfiguration<T extends SimplePacketBase>(
-			CustomPacketPayload.Type<BasePayload<T>> id,
-			Class<T> cls,
-			StreamCodec<RegistryFriendlyByteBuf, T> codec,
-			NetDir dir
+		CustomPacketPayload.Type<BasePayload<T>> id,
+		Class<T> cls,
+		StreamCodec<RegistryFriendlyByteBuf, T> codec,
+		NetDir dir
 	) implements IPayloadHandler<BasePayload<T>> {
 
 		private void register(PayloadRegistrar reg) {
@@ -145,7 +157,7 @@ public class PacketHandler {
 	}
 
 	public record BasePayload<T extends SimplePacketBase>(PacketConfiguration<T> config, T packet)
-			implements CustomPacketPayload {
+		implements CustomPacketPayload {
 
 		@Override
 		public Type<? extends CustomPacketPayload> type() {
