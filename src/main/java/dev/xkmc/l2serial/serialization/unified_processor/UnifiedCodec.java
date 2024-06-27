@@ -191,6 +191,10 @@ public class UnifiedCodec {
 		if (ctx.hasSpecialHandling(cls.getAsClass())) {
 			return Optional.of(() -> ctx.serializeSpecial(cls.getAsClass(), obj));
 		}
+		var codecReg = Handlers.CODEC_MAP.get(cls.getAsClass());
+		if (codecReg != null) {
+			return Optional.of(() -> ctx.serializeCodec(codecReg, obj));
+		}
 		GenericCodec codec = GenericCodec.find(cls, obj);
 		if (codec != null) {
 			return Optional.of(() -> codec.serializeValue(ctx, cls, obj));
