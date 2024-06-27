@@ -101,7 +101,7 @@ public class UnifiedCodec {
 	private static <C extends UnifiedContext<E, O, A>, E, O extends E, A extends E>
 	O serializeObjectImpl(C ctx, O ans, ClassCache cls, @Nullable Object obj) throws Exception {
 		if (cls.getSerialAnnotation() == null)
-			throw new Exception("cannot serialize " + cls);
+			throw new Exception("cannot serialize " + cls.cls.getName());
 		while (cls.getSerialAnnotation() != null) {
 			TreeMap<String, FieldCache> map = new TreeMap<>();
 			for (FieldCache f : cls.getFields()) {
