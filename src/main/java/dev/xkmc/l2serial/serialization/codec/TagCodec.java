@@ -48,9 +48,9 @@ public class TagCodec {
 	 * Supports only <code>@SerialClass</code> objects.
 	 * For other objects, use <code>valueFromTag</code>
 	 *
-	 * @param tag  source of data
-	 * @param cls  deserialization type information
-	 * @param obj  optional. The object to inject into. Constructs a new object if it's null.
+	 * @param tag source of data
+	 * @param cls deserialization type information
+	 * @param obj optional. The object to inject into. Constructs a new object if it's null.
 	 * @return the deserialized object, or null if failed.
 	 */
 	@Nullable
@@ -89,8 +89,8 @@ public class TagCodec {
 	/**
 	 * Deserialize any nonnull value
 	 *
-	 * @param tag  source of data
-	 * @param cls  deserialization type information
+	 * @param tag source of data
+	 * @param cls deserialization type information
 	 * @return the deserialized value, or null if failed.
 	 */
 	@Nullable
@@ -102,8 +102,8 @@ public class TagCodec {
 	/**
 	 * Serialize any value.
 	 *
-	 * @param cls  deserialization type information
-	 * @param obj  The value to serialize
+	 * @param cls deserialization type information
+	 * @param obj The value to serialize
 	 * @return a <code>Tag</code> representing the value
 	 */
 	@Nullable

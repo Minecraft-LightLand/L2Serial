@@ -135,10 +135,10 @@ public class PacketHandler {
 	}
 
 	public record PacketConfiguration<T extends SimplePacketBase>(
-		CustomPacketPayload.Type<BasePayload<T>> id,
-		Class<T> cls,
-		StreamCodec<RegistryFriendlyByteBuf, T> codec,
-		NetDir dir
+			CustomPacketPayload.Type<BasePayload<T>> id,
+			Class<T> cls,
+			StreamCodec<RegistryFriendlyByteBuf, T> codec,
+			NetDir dir
 	) implements IPayloadHandler<BasePayload<T>> {
 
 		private void register(PayloadRegistrar reg) {
@@ -157,7 +157,7 @@ public class PacketHandler {
 	}
 
 	public record BasePayload<T extends SimplePacketBase>(PacketConfiguration<T> config, T packet)
-		implements CustomPacketPayload {
+			implements CustomPacketPayload {
 
 		@Override
 		public Type<? extends CustomPacketPayload> type() {

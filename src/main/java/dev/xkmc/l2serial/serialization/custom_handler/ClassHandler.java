@@ -2,7 +2,6 @@ package dev.xkmc.l2serial.serialization.custom_handler;
 
 import com.google.gson.JsonElement;
 import net.minecraft.nbt.Tag;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 
 import javax.annotation.Nonnull;

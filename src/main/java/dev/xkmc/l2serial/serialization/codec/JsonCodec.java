@@ -22,6 +22,7 @@ public class JsonCodec {
 
 	/**
 	 * The data must not represent a null object.
+	 *
 	 * @param obj source of data
 	 * @param cls deserialization type information
 	 * @param ans the object to inject into. Construct a new object if it's null.
@@ -38,6 +39,7 @@ public class JsonCodec {
 	/**
 	 * Serialization type information will be assumed to be the object type.
 	 * The deserialization type of this object must match its class.
+	 *
 	 * @param obj The object to be serialized.
 	 * @return The serialized json, or null if failed.
 	 */
@@ -60,10 +62,11 @@ public class JsonCodec {
 	 * Serialize the object into provided json object.
 	 * Supports only <code>@SerialClass</code> objects.
 	 * Primarily used for recipes.
-	 * @param obj The object to be serialized.
+	 *
+	 * @param obj   The object to be serialized.
 	 * @param input The json to write to
 	 * @return The same <code>JsonObject</code> as <code>input</code>
-	 * */
+	 */
 	@Nullable
 	public <T> JsonObject toJsonObject(T obj, JsonObject input) {
 		return Wrappers.get(() -> UnifiedCodec.serializeObject(new JsonContext(access), input, ClassCache.get(obj.getClass()), obj));

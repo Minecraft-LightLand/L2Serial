@@ -12,7 +12,6 @@ import dev.xkmc.l2serial.serialization.type_cache.FieldCache;
 import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
 import dev.xkmc.l2serial.util.Wrappers;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.resources.RegistryOps;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -21,7 +20,7 @@ import java.util.Optional;
 public class JsonContext extends TreeContext<JsonElement, JsonObject, JsonArray> {
 
 	public JsonContext(HolderLookup.Provider access) {
-		this(RegistryOps.create(JsonOps.INSTANCE, access));
+		this(access.createSerializationContext(JsonOps.INSTANCE));
 	}
 
 	public JsonContext(DynamicOps<JsonElement> ops) {

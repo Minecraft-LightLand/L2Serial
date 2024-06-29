@@ -9,7 +9,6 @@ import com.mojang.serialization.DynamicOps;
 import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
 import dev.xkmc.l2serial.serialization.unified_processor.JsonContext;
 import dev.xkmc.l2serial.serialization.unified_processor.TagContext;
-import dev.xkmc.l2serial.serialization.unified_processor.TreeContext;
 import dev.xkmc.l2serial.serialization.unified_processor.UnifiedCodec;
 import dev.xkmc.l2serial.util.Wrappers;
 import net.minecraft.nbt.CompoundTag;
@@ -21,7 +20,6 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.function.UnaryOperator;
 

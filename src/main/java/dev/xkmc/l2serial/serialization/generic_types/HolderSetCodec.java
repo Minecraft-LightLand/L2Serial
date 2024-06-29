@@ -3,7 +3,6 @@ package dev.xkmc.l2serial.serialization.generic_types;
 import dev.xkmc.l2serial.serialization.custom_handler.Handlers;
 import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
 import dev.xkmc.l2serial.serialization.unified_processor.UnifiedContext;
-import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import org.jetbrains.annotations.Nullable;
 

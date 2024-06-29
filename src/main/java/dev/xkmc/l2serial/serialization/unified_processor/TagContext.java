@@ -11,7 +11,6 @@ import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
 import dev.xkmc.l2serial.util.Wrappers;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.*;
-import net.minecraft.resources.RegistryOps;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -34,7 +33,7 @@ public class TagContext extends TreeContext<Tag, CompoundTag, ListTag> {
 	}
 
 	public TagContext(HolderLookup.Provider access, Predicate<SerialField> pred) {
-		this(RegistryOps.create(NbtOps.INSTANCE, access), pred);
+		this(access.createSerializationContext(NbtOps.INSTANCE), pred);
 	}
 
 	@Override
