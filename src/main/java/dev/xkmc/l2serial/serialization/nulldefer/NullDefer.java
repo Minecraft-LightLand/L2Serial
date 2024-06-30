@@ -9,11 +9,11 @@ public abstract class NullDefer<T> {
 
 	@Nullable
 	public static <T> NullDefer<T> get(Class<T> cls) {
-		return Wrappers.cast(Handlers.MAP.get(cls));
+		return Wrappers.cast(Handlers.NULL_DEFER.get(cls));
 	}
 
 	protected NullDefer(Class<T> cls) {
-		Handlers.MAP.put(cls, this);
+		Handlers.NULL_DEFER.put(cls, this);
 	}
 
 	public abstract boolean predicate(T obj);

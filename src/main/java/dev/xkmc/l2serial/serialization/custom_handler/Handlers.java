@@ -15,6 +15,8 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.*;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.RegistryFixedCodec;
 import net.minecraft.resources.ResourceKey;
@@ -47,7 +49,7 @@ public class Handlers {
 	private static final Map<Class<?>, HolderReg<?>> REGMAP = new ConcurrentHashMap<>();
 
 	public static final List<GenericCodec> LIST = new ArrayList<>();
-	public static final Map<Class<?>, NullDefer<?>> MAP = new HashMap<>();
+	public static final Map<Class<?>, NullDefer<?>> NULL_DEFER = new HashMap<>();
 
 	// register handlers
 	static {
@@ -72,6 +74,7 @@ public class Handlers {
 		new CodecHandler<>(FluidStack.class, FluidStack.CODEC, FluidStack.OPTIONAL_STREAM_CODEC);
 		new CodecHandler<>(Ingredient.class, Ingredient.CODEC, Ingredient.CONTENTS_STREAM_CODEC);
 		new CodecHandler<>(MobEffectInstance.class, MobEffectInstance.CODEC, MobEffectInstance.STREAM_CODEC);
+		new CodecHandler<>(Component.class, ComponentSerialization.CODEC, ComponentSerialization.STREAM_CODEC);
 
 		// no JSON
 		new ClassHandler<CompoundTag, CompoundTag>(CompoundTag.class, null, null, f -> f.readNbt(), (f, b) -> f.writeNbt(b), e -> e, e -> e);
