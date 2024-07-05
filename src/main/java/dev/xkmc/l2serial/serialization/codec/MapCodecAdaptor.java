@@ -13,6 +13,7 @@ import dev.xkmc.l2serial.serialization.unified_processor.TreeContext;
 import dev.xkmc.l2serial.serialization.unified_processor.UnifiedCodec;
 import dev.xkmc.l2serial.util.Wrappers;
 import net.minecraft.nbt.Tag;
+import net.minecraft.util.Unit;
 import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nullable;
@@ -30,6 +31,8 @@ public abstract class MapCodecAdaptor<T> extends MapCodec<T> {
 
 	@Nullable
 	public static <E, O extends E, A extends E> TreeContext<E, O, A> getContext(DynamicOps<?> ops) {
+		if (ops.empty() == Unit.INSTANCE)
+			return null;
 		if (ops.empty() instanceof JsonElement) {
 			DynamicOps<JsonElement> jops = Wrappers.cast(ops);
 			return Wrappers.cast(new JsonContext(jops));
@@ -38,6 +41,7 @@ public abstract class MapCodecAdaptor<T> extends MapCodec<T> {
 			DynamicOps<Tag> tops = Wrappers.cast(ops);
 			return Wrappers.cast(new TagContext(tops, f -> true));
 		}
+		CodecAdaptor.LOGGER.error("[MapCodecAdaptor] Unknown ops type with empty ops: {}", ops.empty());
 		return null;
 	}
 
@@ -67,7 +71,7 @@ public abstract class MapCodecAdaptor<T> extends MapCodec<T> {
 		public <E> DataResult<T> decode(DynamicOps<E> ops, MapLike<E> input) {
 			var ctx = getContext(ops);
 			if (ctx == null) {
-				return DataResult.error(() -> "Unknown ops type " + ops.getClass().getSimpleName());
+				return DataResult.error(() -> "[Rcd::decode] Unknown ops type with empty ops: " + ops.empty());
 			}
 			try {
 				RecordCache cache = RecordCache.get(cls);
@@ -88,7 +92,6 @@ public abstract class MapCodecAdaptor<T> extends MapCodec<T> {
 		public <E> RecordBuilder<E> encode(T input, DynamicOps<E> ops, RecordBuilder<E> prefix) {
 			var ctx = getContext(ops);
 			if (ctx == null) {
-				CodecAdaptor.LOGGER.error("Unknown ops type {}", ops.getClass().getSimpleName());
 				return prefix;
 			}
 			try {
@@ -136,7 +139,7 @@ public abstract class MapCodecAdaptor<T> extends MapCodec<T> {
 		public <E> DataResult<T> decode(DynamicOps<E> ops, MapLike<E> input) {
 			var ctx = getContext(ops);
 			if (ctx == null) {
-				return DataResult.error(() -> "Unknown ops type " + ops.getClass().getSimpleName());
+				return DataResult.error(() -> "[Cls::decode] Unknown ops type with empty ops: " + ops.empty());
 			}
 			try {
 				ClassCache cache = ClassCache.get(this.cls);
@@ -166,7 +169,6 @@ public abstract class MapCodecAdaptor<T> extends MapCodec<T> {
 		public <E> RecordBuilder<E> encode(T input, DynamicOps<E> ops, RecordBuilder<E> prefix) {
 			var ctx = getContext(ops);
 			if (ctx == null) {
-				CodecAdaptor.LOGGER.error("Unknown ops type {}", ops.getClass().getSimpleName());
 				return prefix;
 			}
 			try {

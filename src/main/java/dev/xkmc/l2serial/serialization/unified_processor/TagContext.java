@@ -62,11 +62,17 @@ public class TagContext extends TreeContext<Tag, CompoundTag, ListTag> {
 		Map map = (Map) def;
 		map.clear();
 		for (String str : ctag.getAllKeys()) {
-			Object mkey = key.getAsClass() == String.class ? str :
-					key.getAsClass().isEnum() ? Enum.valueOf((Class) key.getAsClass(), str) :
-							Handlers.NBT_MAP.get(key.getAsClass()).fromTag(StringTag.valueOf(str));
+			Class kcls = key.getAsClass();
+			Object mkey = null;
+			if (kcls == String.class) mkey = str;
+			else if (kcls.isEnum()) mkey = Enum.valueOf(kcls, str);
+			else if (Handlers.CODEC_MAP.containsKey(kcls))
+				mkey = Handlers.CODEC_MAP.get(kcls).codec().decode(ops(), StringTag.valueOf(str)).getOrThrow();
+			else if (Handlers.NBT_MAP.containsKey(kcls))
+				mkey = Handlers.NBT_MAP.get(kcls).fromTag(StringTag.valueOf(str));
 			Tag t = ctag.get(str);
-			map.put(mkey, UnifiedCodec.deserializeValue(this, t == null ? NULL : t, val, null));
+			if (mkey != null)
+				map.put(mkey, UnifiedCodec.deserializeValue(this, t == null ? NULL : t, val, null));
 		}
 		return map;
 	}

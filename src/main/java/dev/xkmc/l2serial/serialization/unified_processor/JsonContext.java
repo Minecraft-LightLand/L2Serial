@@ -109,10 +109,16 @@ public class JsonContext extends TreeContext<JsonElement, JsonObject, JsonArray>
 	public Object deserializeEfficientMap(JsonElement e, TypeInfo ckey, TypeInfo cval, Object ans) throws Exception {
 		((Map) ans).clear();
 		for (Map.Entry<String, JsonElement> ent : e.getAsJsonObject().entrySet()) {
-			Object key = ckey.getAsClass() == String.class ? ent.getKey() :
-					ckey.getAsClass().isEnum() ? Enum.valueOf((Class) ckey.getAsClass(), ent.getKey()) :
-							Handlers.JSON_MAP.get(ckey.getAsClass()).fromJson(new JsonPrimitive(ent.getKey()));
-			((Map) ans).put(key, UnifiedCodec.deserializeValue(this, ent.getValue(), cval, null));
+			Class kcls = ckey.getAsClass();
+			Object key = null;
+			if (kcls == String.class) key = ent.getKey();
+			else if (kcls.isEnum()) key = Enum.valueOf(kcls, ent.getKey());
+			else if (Handlers.CODEC_MAP.containsKey(kcls))
+				key = Handlers.CODEC_MAP.get(kcls).codec().decode(ops(), new JsonPrimitive(ent.getKey()));
+			else if (Handlers.JSON_MAP.containsKey(kcls))
+				key = Handlers.JSON_MAP.get(kcls).fromJson(new JsonPrimitive(ent.getKey()));
+			if (key != null)
+				((Map) ans).put(key, UnifiedCodec.deserializeValue(this, ent.getValue(), cval, null));
 		}
 		return ans;
 	}

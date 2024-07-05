@@ -1,6 +1,7 @@
 package dev.xkmc.l2serial.serialization.codec;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
@@ -12,10 +13,12 @@ import dev.xkmc.l2serial.serialization.unified_processor.TagContext;
 import dev.xkmc.l2serial.serialization.unified_processor.UnifiedCodec;
 import dev.xkmc.l2serial.util.Wrappers;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.EndTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.RegistryOps;
+import net.minecraft.util.Unit;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -53,12 +56,15 @@ public record CodecAdaptor<T>(Class<T> cls, UnaryOperator<T> validator) implemen
 				return DataResult.error(e::getMessage);
 			}
 		}
-		return DataResult.error(() -> "Unsupported ops type " + ops.getClass().getSimpleName() + " and value " + input.getClass().getSimpleName());
+		return DataResult.error(() -> "[CodecAdaptor::decode] Unsupported ops type " + ops.empty() + " and value " + input.getClass().getSimpleName());
 	}
 
 	@Override
 	public <E> DataResult<E> encode(T input, DynamicOps<E> ops, E prefix) {
-		if (ops.empty() instanceof JsonElement) {
+		if (ops.empty() == Unit.INSTANCE) {
+			return DataResult.success(Wrappers.cast(Unit.INSTANCE));
+		}
+		if (ops.empty() == JsonNull.INSTANCE) {
 			RegistryOps<JsonElement> jops = Wrappers.cast(ops);
 			try {
 				var json = UnifiedCodec.serializeValue(new JsonContext(jops), TypeInfo.of(cls), input);
@@ -68,16 +74,16 @@ public record CodecAdaptor<T>(Class<T> cls, UnaryOperator<T> validator) implemen
 							a.add(e.getKey(), e.getValue());
 						}
 					} else {
-						return DataResult.error(() -> "Non-empty prefix for type " + ops.getClass().getSimpleName());
+						return DataResult.error(() -> "[CodecAdaptor::encode] Non-empty prefix for type " + ops.empty());
 					}
-					return DataResult.success(Wrappers.cast(json));
 				}
+				return DataResult.success(Wrappers.cast(json));
 			} catch (Exception e) {
 				LOGGER.throwing(Level.ERROR, e);
 				return DataResult.error(e::getMessage);
 			}
 		}
-		if (ops.empty() instanceof Tag) {
+		if (ops.empty() == EndTag.INSTANCE) {
 			RegistryOps<Tag> tops = Wrappers.cast(ops);
 			try {
 				var tag = UnifiedCodec.serializeValue(new TagContext(tops, f -> true), TypeInfo.of(cls), input);
@@ -87,16 +93,18 @@ public record CodecAdaptor<T>(Class<T> cls, UnaryOperator<T> validator) implemen
 							a.put(e, Objects.requireNonNull(b.get(e)));
 						}
 					} else {
-						return DataResult.error(() -> "Non-empty prefix for type " + ops.getClass().getSimpleName());
+						return DataResult.error(() -> "[CodecAdaptor::encode] Non-empty prefix for type " + ops.empty());
 					}
-					return DataResult.success(Wrappers.cast(tag));
 				}
+				return DataResult.success(Wrappers.cast(tag));
 			} catch (Exception e) {
 				LOGGER.throwing(Level.ERROR, e);
 				return DataResult.error(e::getMessage);
 			}
 		}
-		return DataResult.error(() -> "Unknown ops type " + ops.getClass().getSimpleName());
+		String str = "[CodecAdaptor::encode] Unknown ops type with empty ops: " + ops.empty();
+		LOGGER.throwing(Level.ERROR, new IllegalStateException(str));
+		return DataResult.error(() -> str);
 	}
 
 	public <B extends RegistryFriendlyByteBuf> StreamCodec<B, T> toNetwork() {

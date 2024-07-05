@@ -70,8 +70,8 @@ public class Handlers {
 		new StringClassHandler<>(ResourceLocation.class, ResourceLocation::parse, ResourceLocation::toString);
 		new StringClassHandler<>(UUID.class, UUID::fromString, UUID::toString);
 
-		new CodecHandler<>(ItemStack.class, ItemStack.CODEC, ItemStack.OPTIONAL_STREAM_CODEC);
-		new CodecHandler<>(FluidStack.class, FluidStack.CODEC, FluidStack.OPTIONAL_STREAM_CODEC);
+		new CodecHandler<>(ItemStack.class, ItemStack.OPTIONAL_CODEC, ItemStack.OPTIONAL_STREAM_CODEC);
+		new CodecHandler<>(FluidStack.class, FluidStack.OPTIONAL_CODEC, FluidStack.OPTIONAL_STREAM_CODEC);
 		new CodecHandler<>(Ingredient.class, Ingredient.CODEC, Ingredient.CONTENTS_STREAM_CODEC);
 		new CodecHandler<>(MobEffectInstance.class, MobEffectInstance.CODEC, MobEffectInstance.STREAM_CODEC);
 		new CodecHandler<>(Component.class, ComponentSerialization.CODEC, ComponentSerialization.STREAM_CODEC);
