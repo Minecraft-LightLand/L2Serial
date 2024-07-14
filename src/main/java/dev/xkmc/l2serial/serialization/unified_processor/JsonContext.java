@@ -114,7 +114,7 @@ public class JsonContext extends TreeContext<JsonElement, JsonObject, JsonArray>
 			if (kcls == String.class) key = ent.getKey();
 			else if (kcls.isEnum()) key = Enum.valueOf(kcls, ent.getKey());
 			else if (Handlers.CODEC_MAP.containsKey(kcls))
-				key = Handlers.CODEC_MAP.get(kcls).codec().decode(ops(), new JsonPrimitive(ent.getKey()));
+				key = deserializeCodec(Handlers.CODEC_MAP.get(kcls), new JsonPrimitive(ent.getKey()));
 			else if (Handlers.JSON_MAP.containsKey(kcls))
 				key = Handlers.JSON_MAP.get(kcls).fromJson(new JsonPrimitive(ent.getKey()));
 			if (key != null)

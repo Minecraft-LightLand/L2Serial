@@ -67,7 +67,7 @@ public class TagContext extends TreeContext<Tag, CompoundTag, ListTag> {
 			if (kcls == String.class) mkey = str;
 			else if (kcls.isEnum()) mkey = Enum.valueOf(kcls, str);
 			else if (Handlers.CODEC_MAP.containsKey(kcls))
-				mkey = Handlers.CODEC_MAP.get(kcls).codec().decode(ops(), StringTag.valueOf(str)).getOrThrow();
+				mkey = deserializeCodec(Handlers.CODEC_MAP.get(kcls), StringTag.valueOf(str));
 			else if (Handlers.NBT_MAP.containsKey(kcls))
 				mkey = Handlers.NBT_MAP.get(kcls).fromTag(StringTag.valueOf(str));
 			Tag t = ctag.get(str);
