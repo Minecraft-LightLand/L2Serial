@@ -137,7 +137,7 @@ public abstract class MapCodecAdaptor<T> extends MapCodec<T> {
 
 		@Override
 		public <E> DataResult<T> decode(DynamicOps<E> ops, MapLike<E> input) {
-			var ctx = getContext(ops);
+			TreeContext<E, ?, ?> ctx = getContext(ops);
 			if (ctx == null) {
 				return DataResult.error(() -> "[Cls::decode] Unknown ops type with empty ops: " + ops.empty());
 			}
@@ -146,10 +146,10 @@ public abstract class MapCodecAdaptor<T> extends MapCodec<T> {
 				Object ans = cache.create();
 				for (var entry : map.entrySet()) {
 					FieldCache f = entry.getValue();
-					if (ctx.shouldRead(input, f)) {
+					if (ctx.shouldReadMap(input, f)) {
 						Object def = f.get(ans);
 						Object content;
-						content = UnifiedCodec.deserializeValue(ctx, ctx.retrieve(input, f.getName()), f.toType(), def);
+						content = UnifiedCodec.deserializeValue(ctx, ctx.retrieveMap(input, f.getName()), f.toType(), def);
 						f.set(ans, content);
 					} else {
 						NullDefer<?> nil = NullDefer.get(f.toType().getAsClass());

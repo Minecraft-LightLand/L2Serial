@@ -3,6 +3,7 @@ package dev.xkmc.l2serial.serialization.unified_processor;
 import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.MapLike;
 import dev.xkmc.l2serial.serialization.custom_handler.Handlers;
 import dev.xkmc.l2serial.serialization.generic_types.CodecReg;
 import dev.xkmc.l2serial.serialization.marker.SerialField;
@@ -108,7 +109,18 @@ public class TagContext extends TreeContext<Tag, CompoundTag, ListTag> {
 	}
 
 	@Override
+	public boolean shouldReadMap(MapLike<Tag> obj, FieldCache field) throws Exception {
+		return pred.test(field.getSerialAnnotation()) && (obj.get(field.getName()) != null);
+	}
+
+	@Override
 	public Tag retrieve(CompoundTag obj, String field) {
+		Tag t = obj.get(field);
+		return t == null ? NULL : t;
+	}
+
+	@Override
+	public Tag retrieveMap(MapLike<Tag> obj, String field) {
 		Tag t = obj.get(field);
 		return t == null ? NULL : t;
 	}

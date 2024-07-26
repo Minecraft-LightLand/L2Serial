@@ -1,6 +1,7 @@
 package dev.xkmc.l2serial.network;
 
 import dev.xkmc.l2serial.serialization.codec.CodecAdaptor;
+import dev.xkmc.l2serial.util.ModContainerHack;
 import dev.xkmc.l2serial.util.Wrappers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -11,7 +12,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
-import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -58,10 +58,7 @@ public class PacketHandler {
 		ver = version;
 		verStr = String.valueOf(ver);
 		this.values = values;
-
-		var cont = ModLoadingContext.get().getActiveContainer();
-		if (!cont.getModId().equals(id))
-			throw new IllegalStateException("Class Initialized from wrong thread for " + id);
+		var cont = ModContainerHack.getMod(id);
 		var bus = cont.getEventBus();
 		if (bus != null) bus.addListener(this::register);
 		else throw new IllegalStateException("Event bus is null for " + id);

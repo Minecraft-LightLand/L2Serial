@@ -2,7 +2,9 @@ package dev.xkmc.l2serial.serialization.unified_processor;
 
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.MapLike;
 import dev.xkmc.l2serial.serialization.type_cache.ClassCache;
+import dev.xkmc.l2serial.serialization.type_cache.FieldCache;
 import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
 import dev.xkmc.l2serial.util.Wrappers;
 
@@ -43,6 +45,16 @@ public abstract class TreeContext<E, O extends E, A extends E> extends UnifiedCo
 	public void setValueOfEntry(O obj, E e) {
 		addField(obj, "_val", e);
 	}
+
+	/**
+	 * used for map codec
+	 */
+	public abstract boolean shouldReadMap(MapLike<E> obj, FieldCache field) throws Exception;
+
+	/**
+	 * used for map codec
+	 */
+	public abstract E retrieveMap(MapLike<E> obj, String field);
 
 
 	@Override

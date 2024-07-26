@@ -5,6 +5,7 @@ import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.JsonOps;
+import com.mojang.serialization.MapLike;
 import dev.xkmc.l2serial.serialization.custom_handler.Handlers;
 import dev.xkmc.l2serial.serialization.generic_types.CodecReg;
 import dev.xkmc.l2serial.serialization.marker.SerialField;
@@ -75,7 +76,17 @@ public class JsonContext extends TreeContext<JsonElement, JsonObject, JsonArray>
 	}
 
 	@Override
+	public boolean shouldReadMap(MapLike<JsonElement> obj, FieldCache field) throws Exception {
+		return obj.get(field.getName()) != null;
+	}
+
+	@Override
 	public JsonElement retrieve(JsonObject obj, String field) {
+		return obj.get(field);
+	}
+
+	@Override
+	public JsonElement retrieveMap(MapLike<JsonElement> obj, String field) {
 		return obj.get(field);
 	}
 
