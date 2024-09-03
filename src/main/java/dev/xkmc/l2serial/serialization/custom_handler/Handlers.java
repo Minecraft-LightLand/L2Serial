@@ -41,15 +41,15 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Handlers {
 
-	public static final Map<Class<?>, JsonClassHandler<?>> JSON_MAP = new HashMap<>();
-	public static final Map<Class<?>, NBTClassHandler<?, ?>> NBT_MAP = new HashMap<>();
-	public static final Map<Class<?>, PacketClassHandler<?>> PACKET_MAP = new HashMap<>();
-	public static final Map<Class<?>, CodecReg<?>> CODEC_MAP = new HashMap<>();
+	public static final Map<Class<?>, JsonClassHandler<?>> JSON_MAP = new ConcurrentHashMap<>();
+	public static final Map<Class<?>, NBTClassHandler<?, ?>> NBT_MAP = new ConcurrentHashMap<>();
+	public static final Map<Class<?>, PacketClassHandler<?>> PACKET_MAP = new ConcurrentHashMap<>();
+	public static final Map<Class<?>, CodecReg<?>> CODEC_MAP = new ConcurrentHashMap<>();
 
 	private static final Map<Class<?>, HolderReg<?>> REGMAP = new ConcurrentHashMap<>();
 
 	public static final List<GenericCodec> LIST = new ArrayList<>();
-	public static final Map<Class<?>, NullDefer<?>> NULL_DEFER = new HashMap<>();
+	public static final Map<Class<?>, NullDefer<?>> NULL_DEFER = new ConcurrentHashMap<>();
 
 	// register handlers
 	static {

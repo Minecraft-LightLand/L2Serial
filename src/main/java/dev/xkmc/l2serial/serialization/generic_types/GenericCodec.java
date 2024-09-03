@@ -31,7 +31,9 @@ public abstract class GenericCodec {
 	}
 
 	protected GenericCodec() {
-		Handlers.LIST.add(this);
+		synchronized (Handlers.LIST) {
+			Handlers.LIST.add(this);
+		}
 	}
 
 	public abstract boolean predicate(Class<?> cls);
