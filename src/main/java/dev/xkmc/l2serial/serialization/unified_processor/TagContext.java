@@ -6,6 +6,7 @@ import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.MapLike;
 import dev.xkmc.l2serial.serialization.custom_handler.Handlers;
 import dev.xkmc.l2serial.serialization.generic_types.CodecReg;
+import dev.xkmc.l2serial.serialization.generic_types.HolderCodec;
 import dev.xkmc.l2serial.serialization.marker.SerialField;
 import dev.xkmc.l2serial.serialization.type_cache.FieldCache;
 import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
@@ -67,6 +68,8 @@ public class TagContext extends TreeContext<Tag, CompoundTag, ListTag> {
 			Object mkey = null;
 			if (kcls == String.class) mkey = str;
 			else if (kcls.isEnum()) mkey = Enum.valueOf(kcls, str);
+			else if (HolderCodec.INS.predicate(kcls))
+				mkey = HolderCodec.INS.deserializeValue(this, StringTag.valueOf(str), key, null);
 			else if (Handlers.CODEC_MAP.containsKey(kcls))
 				mkey = deserializeCodec(Handlers.CODEC_MAP.get(kcls), StringTag.valueOf(str));
 			else if (Handlers.NBT_MAP.containsKey(kcls))

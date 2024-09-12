@@ -8,10 +8,12 @@ import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.MapLike;
 import dev.xkmc.l2serial.serialization.custom_handler.Handlers;
 import dev.xkmc.l2serial.serialization.generic_types.CodecReg;
+import dev.xkmc.l2serial.serialization.generic_types.HolderCodec;
 import dev.xkmc.l2serial.serialization.marker.SerialField;
 import dev.xkmc.l2serial.serialization.type_cache.FieldCache;
 import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
 import dev.xkmc.l2serial.util.Wrappers;
+import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 
 import javax.annotation.Nullable;
@@ -124,6 +126,8 @@ public class JsonContext extends TreeContext<JsonElement, JsonObject, JsonArray>
 			Object key = null;
 			if (kcls == String.class) key = ent.getKey();
 			else if (kcls.isEnum()) key = Enum.valueOf(kcls, ent.getKey());
+			else if (HolderCodec.INS.predicate(kcls))
+				key = HolderCodec.INS.deserializeValue(this, new JsonPrimitive(ent.getKey()), ckey, null);
 			else if (Handlers.CODEC_MAP.containsKey(kcls))
 				key = deserializeCodec(Handlers.CODEC_MAP.get(kcls), new JsonPrimitive(ent.getKey()));
 			else if (Handlers.JSON_MAP.containsKey(kcls))
