@@ -12,9 +12,7 @@ import dev.xkmc.l2serial.serialization.unified_processor.JsonContext;
 import dev.xkmc.l2serial.serialization.unified_processor.TagContext;
 import dev.xkmc.l2serial.serialization.unified_processor.UnifiedCodec;
 import dev.xkmc.l2serial.util.Wrappers;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.EndTag;
-import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.*;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.RegistryOps;
@@ -50,6 +48,18 @@ public record CodecAdaptor<T>(Class<T> cls, UnaryOperator<T> validator) implemen
 			DynamicOps<Tag> jops = Wrappers.cast(ops);
 			try {
 				T val = Wrappers.cast(UnifiedCodec.deserializeValue(new TagContext(jops, e -> true), (Tag) input, TypeInfo.of(cls), null));
+				return DataResult.success(Pair.of(validator.apply(val), input));
+			} catch (Exception e) {
+				LOGGER.throwing(Level.ERROR, e);
+				return DataResult.error(e::getMessage);
+			}
+		}
+		if (ops instanceof RegistryOps<E>) {
+			var tag = TagParser.AS_CODEC.decode(ops, input).getOrThrow().getFirst();
+			var ti = tag.get("value");
+			DynamicOps<Tag> jops = ((RegistryOps<E>) ops).withParent(NbtOps.INSTANCE);
+			try {
+				T val = Wrappers.cast(UnifiedCodec.deserializeValue(new TagContext(jops, e -> true), ti, TypeInfo.of(cls), null));
 				return DataResult.success(Pair.of(validator.apply(val), input));
 			} catch (Exception e) {
 				LOGGER.throwing(Level.ERROR, e);
@@ -97,6 +107,27 @@ public record CodecAdaptor<T>(Class<T> cls, UnaryOperator<T> validator) implemen
 					}
 				}
 				return DataResult.success(Wrappers.cast(tag));
+			} catch (Exception e) {
+				LOGGER.throwing(Level.ERROR, e);
+				return DataResult.error(e::getMessage);
+			}
+		}
+		if (ops instanceof RegistryOps<E> rops) {
+			RegistryOps<Tag> tops = rops.withParent(NbtOps.INSTANCE);
+			try {
+				var tag = UnifiedCodec.serializeValue(new TagContext(tops, f -> true), TypeInfo.of(cls), input);
+				if (!ops.empty().equals(prefix)) {
+					if (tag instanceof CompoundTag a && prefix instanceof CompoundTag b) {
+						for (var e : b.getAllKeys()) {
+							a.put(e, Objects.requireNonNull(b.get(e)));
+						}
+					} else {
+						return DataResult.error(() -> "[CodecAdaptor::encode] Non-empty prefix for type " + ops.empty());
+					}
+				}
+				CompoundTag ans = new CompoundTag();
+				ans.put("value", tag);
+				return TagParser.AS_CODEC.encodeStart(ops, ans);
 			} catch (Exception e) {
 				LOGGER.throwing(Level.ERROR, e);
 				return DataResult.error(e::getMessage);
