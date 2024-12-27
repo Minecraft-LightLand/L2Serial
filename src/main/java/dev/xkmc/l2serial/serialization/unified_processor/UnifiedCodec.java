@@ -1,7 +1,7 @@
 package dev.xkmc.l2serial.serialization.unified_processor;
 
-import dev.xkmc.l2serial.serialization.generic_types.GenericCodec;
 import dev.xkmc.l2serial.serialization.custom_handler.Handlers;
+import dev.xkmc.l2serial.serialization.generic_types.GenericCodec;
 import dev.xkmc.l2serial.serialization.nulldefer.NullDefer;
 import dev.xkmc.l2serial.serialization.type_cache.ClassCache;
 import dev.xkmc.l2serial.serialization.type_cache.FieldCache;
@@ -61,14 +61,13 @@ public class UnifiedCodec {
 			} else if (real.get().right().isPresent()) {
 				cls = real.get().right().get();
 			}
-		} else {
-			if (ctx.hasSpecialHandling(cls.getAsClass())) {
-				return ctx.deserializeSpecial(cls.getAsClass(), e);
-			}
-			for (GenericCodec codec : Handlers.LIST) {
-				if (codec.predicate(cls, ans)) {
-					return codec.deserializeValue(ctx, e, cls, ans);
-				}
+		}
+		if (ctx.hasSpecialHandling(cls.getAsClass())) {
+			return ctx.deserializeSpecial(cls.getAsClass(), e);
+		}
+		for (GenericCodec codec : Handlers.LIST) {
+			if (codec.predicate(cls, ans)) {
+				return codec.deserializeValue(ctx, e, cls, ans);
 			}
 		}
 		return deserializeObject(ctx, ctx.castAsMap(e), cls.toCache(), ans);
