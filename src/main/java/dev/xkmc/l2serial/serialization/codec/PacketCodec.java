@@ -83,6 +83,7 @@ public class PacketCodec {
 	 * @param r   The serialization type information
 	 */
 	public static <T extends R, R> void to(RegistryFriendlyByteBuf buf, T obj, Class<R> r) {
+		if (buf.registryAccess() == null) throw new IllegalStateException("RegistryAccess cannot be null");
 		Wrappers.run(() -> UnifiedCodec.serializeValue(new PacketContext(buf), TypeInfo.of(r), obj));
 	}
 

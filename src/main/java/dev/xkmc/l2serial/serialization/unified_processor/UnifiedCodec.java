@@ -61,18 +61,17 @@ public class UnifiedCodec {
 			} else if (real.get().right().isPresent()) {
 				cls = real.get().right().get();
 			}
-		} else {
-			if (ctx.hasSpecialHandling(cls.getAsClass())) {
-				return ctx.deserializeSpecial(cls.getAsClass(), e);
-			}
-			var codecReg = Handlers.CODEC_MAP.get(cls.getAsClass());
-			if (codecReg != null) {
-				return ctx.deserializeCodec(codecReg, e);
-			}
-			GenericCodec gen = GenericCodec.find(cls, ans);
-			if (gen != null) {
-				return gen.deserializeValue(ctx, e, cls, ans);
-			}
+		}
+		if (ctx.hasSpecialHandling(cls.getAsClass())) {
+			return ctx.deserializeSpecial(cls.getAsClass(), e);
+		}
+		var codecReg = Handlers.CODEC_MAP.get(cls.getAsClass());
+		if (codecReg != null) {
+			return ctx.deserializeCodec(codecReg, e);
+		}
+		GenericCodec gen = GenericCodec.find(cls, ans);
+		if (gen != null) {
+			return gen.deserializeValue(ctx, e, cls, ans);
 		}
 		return deserializeObject(ctx, ctx.castAsMap(e), cls.toCache(), ans);
 	}
