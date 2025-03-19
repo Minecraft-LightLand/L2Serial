@@ -1,9 +1,6 @@
 package dev.xkmc.l2serial.serialization.type_cache;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 
 public class TypeInfo {
 
@@ -12,6 +9,10 @@ public class TypeInfo {
 	}
 
 	public static TypeInfo of(Field field) {
+		return new TypeInfo(field.getType(), field.getGenericType());
+	}
+
+	public static TypeInfo of(RecordComponent field) {
 		return new TypeInfo(field.getType(), field.getGenericType());
 	}
 
