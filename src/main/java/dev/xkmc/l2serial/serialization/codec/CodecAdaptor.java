@@ -55,7 +55,7 @@ public record CodecAdaptor<T>(Class<T> cls, UnaryOperator<T> validator) implemen
 			}
 		}
 		if (ops instanceof RegistryOps<E>) {
-			var tag = TagParser.AS_CODEC.decode(ops, input).getOrThrow().getFirst();
+			var tag = TagParser.FLATTENED_CODEC.decode(ops, input).getOrThrow().getFirst();
 			var ti = tag.get("value");
 			DynamicOps<Tag> jops = ((RegistryOps<E>) ops).withParent(NbtOps.INSTANCE);
 			try {
@@ -99,7 +99,7 @@ public record CodecAdaptor<T>(Class<T> cls, UnaryOperator<T> validator) implemen
 				var tag = UnifiedCodec.serializeValue(new TagContext(tops, f -> true), TypeInfo.of(cls), input);
 				if (!ops.empty().equals(prefix)) {
 					if (tag instanceof CompoundTag a && prefix instanceof CompoundTag b) {
-						for (var e : b.getAllKeys()) {
+						for (var e : b.keySet()) {
 							a.put(e, Objects.requireNonNull(b.get(e)));
 						}
 					} else {
@@ -118,7 +118,7 @@ public record CodecAdaptor<T>(Class<T> cls, UnaryOperator<T> validator) implemen
 				var tag = UnifiedCodec.serializeValue(new TagContext(tops, f -> true), TypeInfo.of(cls), input);
 				if (!ops.empty().equals(prefix)) {
 					if (tag instanceof CompoundTag a && prefix instanceof CompoundTag b) {
-						for (var e : b.getAllKeys()) {
+						for (var e : b.keySet()) {
 							a.put(e, Objects.requireNonNull(b.get(e)));
 						}
 					} else {
@@ -127,7 +127,7 @@ public record CodecAdaptor<T>(Class<T> cls, UnaryOperator<T> validator) implemen
 				}
 				CompoundTag ans = new CompoundTag();
 				ans.put("value", tag);
-				return TagParser.AS_CODEC.encodeStart(ops, ans);
+				return TagParser.FLATTENED_CODEC.encodeStart(ops, ans);
 			} catch (Exception e) {
 				LOGGER.throwing(Level.ERROR, e);
 				return DataResult.error(e::getMessage);

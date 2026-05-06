@@ -5,7 +5,7 @@ import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
 import dev.xkmc.l2serial.serialization.unified_processor.TreeContext;
 import dev.xkmc.l2serial.serialization.unified_processor.UnifiedContext;
 import net.minecraft.core.Holder;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.data.loading.DatagenModLoader;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,7 +32,7 @@ public class HolderCodec extends GenericCodec {
 	public <C extends UnifiedContext<E, O, A>, E, O extends E, A extends E> E serializeValue(C ctx, TypeInfo cls, Object obj) throws Exception {
 		if (ctx instanceof TreeContext<?, ?, ?> && DatagenModLoader.isRunningDataGen()) {
 			Holder<?> holder = (Holder<?>) obj;
-			return ctx.serializeSpecial(ResourceLocation.class, holder.getKey().location());
+			return ctx.serializeSpecial(Identifier.class, holder.getKey().identifier());
 		}
 		var type = cls.getGenericType(0).getAsClass();
 		return ctx.serializeCodec(Handlers.getReg(type).holder(), obj);

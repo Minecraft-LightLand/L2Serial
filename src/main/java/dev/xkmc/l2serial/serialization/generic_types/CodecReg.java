@@ -4,6 +4,6 @@ import com.mojang.serialization.Codec;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 
-public record CodecReg<T>(Codec<T> codec, StreamCodec<RegistryFriendlyByteBuf, T> stream) {
+public record CodecReg<T>(Codec<T> codec, StreamCodec<? super RegistryFriendlyByteBuf, T> stream) {
 
 }

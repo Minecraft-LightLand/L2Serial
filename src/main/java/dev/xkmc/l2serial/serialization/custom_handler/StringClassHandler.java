@@ -3,6 +3,7 @@ package dev.xkmc.l2serial.serialization.custom_handler;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonPrimitive;
 import net.minecraft.nbt.StringTag;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Function;
 
@@ -13,16 +14,16 @@ public class StringClassHandler<T> extends ClassHandler<StringTag, T> {
 					if (e.isJsonNull())
 						return null;
 					String str = e.getAsString();
-					if (str.length() == 0)
+					if (str.isEmpty())
 						return null;
 					return fj.apply(str);
 				}, p -> {
 					String str = p.readUtf();
-					if (str.length() == 0)
+					if (str.isEmpty())
 						return null;
 					return fj.apply(str);
 				}, (p, t) -> p.writeUtf(t == null ? "" : tp.apply(t)),
-				t -> fj.apply(t.getAsString()),
+				t -> fj.apply(t.value()),
 				e -> StringTag.valueOf(tp.apply(e)));
 	}
 

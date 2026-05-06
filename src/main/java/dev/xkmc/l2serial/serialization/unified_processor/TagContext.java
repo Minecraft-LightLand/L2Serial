@@ -46,10 +46,9 @@ public class TagContext extends TreeContext<Tag, CompoundTag, ListTag> {
 		if (e instanceof CompoundTag obj) {
 			if (obj.contains("_class")) {
 				Tag tcls = obj.get("_class");
-				if (tcls != null) {
-					String scls = tcls.getAsString();
-					if (!scls.isEmpty()) {
-						return Optional.of(Either.right(TypeInfo.of(Class.forName(scls))));
+				if (tcls instanceof StringTag(String value)) {
+					if (!value.isEmpty()) {
+						return Optional.of(Either.right(TypeInfo.of(Class.forName(value))));
 					}
 				}
 			}
@@ -63,7 +62,7 @@ public class TagContext extends TreeContext<Tag, CompoundTag, ListTag> {
 		CompoundTag ctag = (CompoundTag) tag;
 		Map map = (Map) def;
 		map.clear();
-		for (String str : ctag.getAllKeys()) {
+		for (String str : ctag.keySet()) {
 			Class kcls = key.getAsClass();
 			Object mkey = null;
 			if (kcls == String.class) mkey = str;
@@ -155,10 +154,11 @@ public class TagContext extends TreeContext<Tag, CompoundTag, ListTag> {
 
 	@Override
 	public String getAsString(Tag e) {
-		if (e == NULL) {
+		if (e instanceof StringTag(String val))
+			return val;
+		if (e == NULL)
 			return "";
-		}
-		return e.getAsString();
+		throw new IllegalStateException("Tag " + e + " is not a String Tag");
 	}
 
 	@Override

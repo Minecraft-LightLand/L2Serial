@@ -7,7 +7,7 @@ import net.minecraft.network.codec.StreamCodec;
 
 public class CodecHandler<T> {
 
-	public CodecHandler(Class<T> cls, Codec<T> codec, StreamCodec<RegistryFriendlyByteBuf, T> streamCodec) {
+	public CodecHandler(Class<T> cls, Codec<T> codec, StreamCodec<? super RegistryFriendlyByteBuf, T> streamCodec) {
 		Handlers.CODEC_MAP.put(cls, new CodecReg<>(codec, streamCodec));
 	}
 

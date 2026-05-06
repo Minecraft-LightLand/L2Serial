@@ -7,11 +7,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -64,7 +65,7 @@ public class PacketHandler {
 		else throw new IllegalStateException("Event bus is null for " + id);
 	}
 
-	private ResourceLocation of(Class<?> cls) {
+	private Identifier of(Class<?> cls) {
 		String name = cls.getSimpleName();
 		StringBuilder builder = new StringBuilder();
 		for (int i = 0; i < name.length(); i++) {
@@ -75,7 +76,7 @@ public class PacketHandler {
 				builder.append((char) (ch - 'A' + 'a'));
 			}
 		}
-		return ResourceLocation.fromNamespaceAndPath(this.modid, builder.toString());
+		return Identifier.fromNamespaceAndPath(this.modid, builder.toString());
 	}
 
 	private <T extends SimplePacketBase> PacketConfiguration<T> of(Class<T> cls, StreamCodec<RegistryFriendlyByteBuf, T> factory, NetDir dir) {
@@ -95,7 +96,7 @@ public class PacketHandler {
 	}
 
 	public void toServer(SimplePacketBase packet) {
-		PacketDistributor.sendToServer(get(packet));
+		ClientPacketDistributor.sendToServer(get(packet));//TODO
 	}
 
 	public void toTrackingPlayers(SimplePacketBase packet, Entity e) {

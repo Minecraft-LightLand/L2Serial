@@ -7,7 +7,6 @@ import dev.xkmc.l2serial.serialization.nulldefer.NullDefer;
 import dev.xkmc.l2serial.serialization.nulldefer.PrimitiveNullDefer;
 import dev.xkmc.l2serial.serialization.nulldefer.SimpleNullDefer;
 import dev.xkmc.l2serial.util.Wrappers;
-import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryCodecs;
@@ -18,9 +17,10 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryFixedCodec;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Util;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -32,11 +32,15 @@ import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.registries.RegistryManager;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Handlers {
@@ -55,19 +59,19 @@ public class Handlers {
 	static {
 		// primitives
 
-		new ClassHandler<>(long.class, JsonPrimitive::new, JsonElement::getAsLong, FriendlyByteBuf::readLong, FriendlyByteBuf::writeLong, LongTag::getAsLong, LongTag::valueOf, Long.class);
-		new ClassHandler<>(int.class, JsonPrimitive::new, JsonElement::getAsInt, FriendlyByteBuf::readInt, FriendlyByteBuf::writeInt, IntTag::getAsInt, IntTag::valueOf, Integer.class);
-		new ClassHandler<ShortTag, Short>(short.class, JsonPrimitive::new, JsonElement::getAsShort, FriendlyByteBuf::readShort, FriendlyByteBuf::writeShort, ShortTag::getAsShort, ShortTag::valueOf, Short.class);
-		new ClassHandler<>(byte.class, JsonPrimitive::new, JsonElement::getAsByte, FriendlyByteBuf::readByte, FriendlyByteBuf::writeByte, ByteTag::getAsByte, ByteTag::valueOf, Byte.class);
-		new ClassHandler<ByteTag, Boolean>(boolean.class, JsonPrimitive::new, JsonElement::getAsBoolean, FriendlyByteBuf::readBoolean, FriendlyByteBuf::writeBoolean, tag -> tag.getAsByte() != 0, ByteTag::valueOf, Boolean.class);
-		new ClassHandler<ByteTag, Character>(char.class, JsonPrimitive::new, JsonElement::getAsCharacter, FriendlyByteBuf::readChar, FriendlyByteBuf::writeChar, t -> (char) t.getAsByte(), c -> ByteTag.valueOf((byte) (char) c), Character.class);
-		new ClassHandler<>(double.class, JsonPrimitive::new, JsonElement::getAsDouble, FriendlyByteBuf::readDouble, FriendlyByteBuf::writeDouble, DoubleTag::getAsDouble, DoubleTag::valueOf, Double.class);
-		new ClassHandler<>(float.class, JsonPrimitive::new, JsonElement::getAsFloat, FriendlyByteBuf::readFloat, FriendlyByteBuf::writeFloat, FloatTag::getAsFloat, FloatTag::valueOf, Float.class);
+		new ClassHandler<>(long.class, JsonPrimitive::new, JsonElement::getAsLong, FriendlyByteBuf::readLong, FriendlyByteBuf::writeLong, LongTag::value, LongTag::valueOf, Long.class);
+		new ClassHandler<>(int.class, JsonPrimitive::new, JsonElement::getAsInt, FriendlyByteBuf::readInt, FriendlyByteBuf::writeInt, IntTag::value, IntTag::valueOf, Integer.class);
+		new ClassHandler<ShortTag, Short>(short.class, JsonPrimitive::new, JsonElement::getAsShort, FriendlyByteBuf::readShort, FriendlyByteBuf::writeShort, ShortTag::value, ShortTag::valueOf, Short.class);
+		new ClassHandler<>(byte.class, JsonPrimitive::new, JsonElement::getAsByte, FriendlyByteBuf::readByte, FriendlyByteBuf::writeByte, ByteTag::value, ByteTag::valueOf, Byte.class);
+		new ClassHandler<ByteTag, Boolean>(boolean.class, JsonPrimitive::new, JsonElement::getAsBoolean, FriendlyByteBuf::readBoolean, FriendlyByteBuf::writeBoolean, tag -> tag.value() != 0, ByteTag::valueOf, Boolean.class);
+		new ClassHandler<ByteTag, Character>(char.class, JsonPrimitive::new, JsonElement::getAsCharacter, FriendlyByteBuf::readChar, FriendlyByteBuf::writeChar, t -> (char) t.value(), c -> ByteTag.valueOf((byte) (char) c), Character.class);
+		new ClassHandler<>(double.class, JsonPrimitive::new, JsonElement::getAsDouble, FriendlyByteBuf::readDouble, FriendlyByteBuf::writeDouble, DoubleTag::value, DoubleTag::valueOf, Double.class);
+		new ClassHandler<>(float.class, JsonPrimitive::new, JsonElement::getAsFloat, FriendlyByteBuf::readFloat, FriendlyByteBuf::writeFloat, FloatTag::value, FloatTag::valueOf, Float.class);
 
-		new ClassHandler<>(String.class, JsonPrimitive::new, JsonElement::getAsString, FriendlyByteBuf::readUtf, FriendlyByteBuf::writeUtf, Tag::getAsString, StringTag::valueOf);
+		new ClassHandler<>(String.class, JsonPrimitive::new, JsonElement::getAsString, FriendlyByteBuf::readUtf, FriendlyByteBuf::writeUtf, StringTag::value, StringTag::valueOf);
 
 		// minecraft
-		new StringClassHandler<>(ResourceLocation.class, ResourceLocation::parse, ResourceLocation::toString);
+		new StringClassHandler<>(Identifier.class, Identifier::parse, Identifier::toString);
 		new StringClassHandler<>(UUID.class, UUID::fromString, UUID::toString);
 
 		new CodecHandler<>(ItemStack.class, ItemStack.OPTIONAL_CODEC, ItemStack.OPTIONAL_STREAM_CODEC);
@@ -81,32 +85,12 @@ public class Handlers {
 		new ClassHandler<ListTag, ListTag>(ListTag.class, null, null, buf -> (ListTag) buf.readNbt().get("warp"),
 				(buf, tag) -> buf.writeNbt(Util.make(new CompoundTag(), e -> e.put("wrap", tag))), e -> e, e -> e);
 
-		new ClassHandler<>(long[].class, null, null, FriendlyByteBuf::readLongArray, FriendlyByteBuf::writeLongArray, LongArrayTag::getAsLongArray, LongArrayTag::new);
+		new ClassHandler<>(long[].class, null, null, buf -> buf.readLongArray(), (buf, arr) -> buf.writeLongArray(arr), LongArrayTag::getAsLongArray, LongArrayTag::new);
 		new ClassHandler<>(int[].class, null, null, FriendlyByteBuf::readVarIntArray, FriendlyByteBuf::writeVarIntArray, IntArrayTag::getAsIntArray, IntArrayTag::new);
 		new ClassHandler<>(byte[].class, null, null, f -> f.readByteArray(), (f, b) -> f.writeByteArray(b), ByteArrayTag::getAsByteArray, ByteArrayTag::new);
 
-		new ClassHandler<CompoundTag, BlockPos>(BlockPos.class, null, null,
-				p -> p.readBlockPos(),
-				(p, b) -> p.writeBlockPos(b),
-				tag -> new BlockPos(tag.getInt("x"), tag.getInt("y"), tag.getInt("z")),
-				obj -> {
-					CompoundTag tag = new CompoundTag();
-					tag.putInt("x", obj.getX());
-					tag.putInt("y", obj.getY());
-					tag.putInt("z", obj.getZ());
-					return tag;
-				});
-		new ClassHandler<CompoundTag, Vec3>(Vec3.class, null, null,
-				FriendlyByteBuf::readVec3,
-				FriendlyByteBuf::writeVec3,
-				tag -> new Vec3(tag.getDouble("x"), tag.getDouble("y"), tag.getDouble("z")),
-				obj -> {
-					CompoundTag tag = new CompoundTag();
-					tag.putDouble("x", obj.x());
-					tag.putDouble("y", obj.y());
-					tag.putDouble("z", obj.z());
-					return tag;
-				});
+		new CodecHandler<>(BlockPos.class, BlockPos.CODEC, BlockPos.STREAM_CODEC);
+		new CodecHandler<>(Vec3.class, Vec3.CODEC, Vec3.STREAM_CODEC);
 	}
 
 	// register generic codec
@@ -125,7 +109,6 @@ public class Handlers {
 	// register null defer
 	static {
 		new SimpleNullDefer<>(ItemStack.class, ItemStack.EMPTY);
-		new SimpleNullDefer<>(Ingredient.class, Ingredient.EMPTY);
 		new PrimitiveNullDefer<>(Integer.class, 0);
 		new PrimitiveNullDefer<>(int.class, 0);
 		new PrimitiveNullDefer<>(Long.class, 0L);
@@ -180,6 +163,7 @@ public class Handlers {
 		enableVanilla(Potion.class, BuiltInRegistries.POTION);
 		enableVanilla(MobEffect.class, BuiltInRegistries.MOB_EFFECT);
 		enableVanilla(Attribute.class, BuiltInRegistries.ATTRIBUTE);
+		enableVanilla(Fluid.class, BuiltInRegistries.FLUID);
 		enableVanilla(Wrappers.cast(EntityType.class), BuiltInRegistries.ENTITY_TYPE);
 
 		registerReg(Enchantment.class, Registries.ENCHANTMENT);

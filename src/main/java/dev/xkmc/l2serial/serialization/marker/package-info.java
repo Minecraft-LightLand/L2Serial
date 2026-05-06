@@ -3,6 +3,6 @@
 
 package dev.xkmc.l2serial.serialization.marker;
 
-import net.minecraft.MethodsReturnNonnullByDefault;
+import com.mojang.logging.annotations.MethodsReturnNonnullByDefault;
 
 import javax.annotation.ParametersAreNonnullByDefault;

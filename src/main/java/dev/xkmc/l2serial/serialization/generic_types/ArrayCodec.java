@@ -21,7 +21,7 @@ public class ArrayCodec extends GenericCodec {
 		A arr = ctx.castAsList(e);
 		TypeInfo com = cls.getComponentType();
 		int n = ctx.getSize(arr);
-		if (ans == null)
+		if (ans == null || Array.getLength(ans) < n)
 			ans = Array.newInstance(com.getAsClass(), n);
 		for (int i = 0; i < n; i++) {
 			Array.set(ans, i, UnifiedCodec.deserializeValue(ctx, ctx.getElement(arr, i), com, null));
