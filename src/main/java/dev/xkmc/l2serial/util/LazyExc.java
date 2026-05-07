@@ -14,7 +14,6 @@ public class LazyExc<T> {
 			value = factory.get();
 			factory = null;
 		}
-		assert value != null;
 		return value;
 	}
 

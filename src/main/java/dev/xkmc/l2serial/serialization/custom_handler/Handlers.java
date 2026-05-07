@@ -28,6 +28,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -35,6 +36,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStackTemplate;
 import net.neoforged.neoforge.registries.RegistryManager;
 
 import java.util.ArrayList;
@@ -75,7 +77,9 @@ public class Handlers {
 		new StringClassHandler<>(UUID.class, UUID::fromString, UUID::toString);
 
 		new CodecHandler<>(ItemStack.class, ItemStack.OPTIONAL_CODEC, ItemStack.OPTIONAL_STREAM_CODEC);
+		new CodecHandler<>(ItemStackTemplate.class, ItemStackTemplate.CODEC, ItemStackTemplate.STREAM_CODEC);
 		new CodecHandler<>(FluidStack.class, FluidStack.OPTIONAL_CODEC, FluidStack.OPTIONAL_STREAM_CODEC);
+		new CodecHandler<>(FluidStackTemplate.class, FluidStackTemplate.CODEC, FluidStackTemplate.STREAM_CODEC);
 		new CodecHandler<>(Ingredient.class, Ingredient.CODEC, Ingredient.CONTENTS_STREAM_CODEC);
 		new CodecHandler<>(MobEffectInstance.class, MobEffectInstance.CODEC, MobEffectInstance.STREAM_CODEC);
 		new CodecHandler<>(Component.class, ComponentSerialization.CODEC, ComponentSerialization.STREAM_CODEC);
@@ -104,6 +108,7 @@ public class Handlers {
 		new MapCodec();
 		new HolderCodec();
 		new HolderSetCodec();
+		new OptionalCodec();
 	}
 
 	// register null defer
