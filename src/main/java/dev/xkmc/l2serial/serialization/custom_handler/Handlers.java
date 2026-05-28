@@ -2,6 +2,9 @@ package dev.xkmc.l2serial.serialization.custom_handler;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
+import com.mojang.datafixers.util.Either;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.xkmc.l2serial.serialization.generic_types.*;
 import dev.xkmc.l2serial.serialization.nulldefer.NullDefer;
 import dev.xkmc.l2serial.serialization.nulldefer.PrimitiveNullDefer;
@@ -10,6 +13,7 @@ import dev.xkmc.l2serial.util.Wrappers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryCodecs;
+import net.minecraft.core.Vec3i;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.*;
@@ -93,7 +97,14 @@ public class Handlers {
 		new ClassHandler<>(int[].class, null, null, FriendlyByteBuf::readVarIntArray, FriendlyByteBuf::writeVarIntArray, IntArrayTag::getAsIntArray, IntArrayTag::new);
 		new ClassHandler<>(byte[].class, null, null, f -> f.readByteArray(), (f, b) -> f.writeByteArray(b), ByteArrayTag::getAsByteArray, ByteArrayTag::new);
 
-		new CodecHandler<>(BlockPos.class, BlockPos.CODEC, BlockPos.STREAM_CODEC);
+		var legacy = RecordCodecBuilder.<BlockPos>create(i -> i.group(
+				Codec.INT.fieldOf("x").forGetter(Vec3i::getX),
+				Codec.INT.fieldOf("y").forGetter(Vec3i::getY),
+				Codec.INT.fieldOf("z").forGetter(Vec3i::getZ)
+		).apply(i, BlockPos::new));
+		var merged = Codec.either(BlockPos.CODEC, legacy)
+				.xmap(e -> e.map(x -> x, x -> x), Either::left);
+		new CodecHandler<>(BlockPos.class, merged, BlockPos.STREAM_CODEC);
 		new CodecHandler<>(Vec3.class, Vec3.CODEC, Vec3.STREAM_CODEC);
 	}
 
