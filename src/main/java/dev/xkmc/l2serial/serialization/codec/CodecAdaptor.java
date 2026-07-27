@@ -20,16 +20,29 @@ import net.minecraft.util.Unit;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.function.UnaryOperator;
 
-public record CodecAdaptor<T>(Class<T> cls, UnaryOperator<T> validator) implements Codec<T> {
+public record CodecAdaptor<T>(Class<T> cls, UnaryOperator<T> validator, @Nullable T input) implements Codec<T> {
+
+	public static <T> CodecAdaptor<T> toRead(T val) {
+		return new CodecAdaptor<>(Wrappers.cast(val.getClass()), val);
+	}
 
 	public static final Logger LOGGER = LogManager.getLogger();
 
 	public CodecAdaptor(Class<T> cls) {
-		this(cls, e -> e);
+		this(cls, e -> e, null);
+	}
+
+	public CodecAdaptor(Class<T> cls, T val) {
+		this(cls, e -> e, val);
+	}
+
+	public CodecAdaptor(Class<T> cls, UnaryOperator<T> validator) {
+		this(cls, validator, null);
 	}
 
 	@Override
@@ -37,7 +50,7 @@ public record CodecAdaptor<T>(Class<T> cls, UnaryOperator<T> validator) implemen
 		if (ops.empty() instanceof JsonElement) {
 			DynamicOps<JsonElement> jops = Wrappers.cast(ops);
 			try {
-				T val = Wrappers.cast(UnifiedCodec.deserializeValue(new JsonContext(jops), (JsonElement) input, TypeInfo.of(cls), null));
+				T val = Wrappers.cast(UnifiedCodec.deserializeValue(new JsonContext(jops), (JsonElement) input, TypeInfo.of(cls), input));
 				return DataResult.success(Pair.of(validator.apply(val), input));
 			} catch (Exception e) {
 				LOGGER.throwing(Level.ERROR, e);
@@ -47,7 +60,7 @@ public record CodecAdaptor<T>(Class<T> cls, UnaryOperator<T> validator) implemen
 		if (ops.empty() instanceof Tag) {
 			DynamicOps<Tag> jops = Wrappers.cast(ops);
 			try {
-				T val = Wrappers.cast(UnifiedCodec.deserializeValue(new TagContext(jops, e -> true), (Tag) input, TypeInfo.of(cls), null));
+				T val = Wrappers.cast(UnifiedCodec.deserializeValue(new TagContext(jops, e -> true), (Tag) input, TypeInfo.of(cls), input));
 				return DataResult.success(Pair.of(validator.apply(val), input));
 			} catch (Exception e) {
 				LOGGER.throwing(Level.ERROR, e);
@@ -59,7 +72,7 @@ public record CodecAdaptor<T>(Class<T> cls, UnaryOperator<T> validator) implemen
 			var ti = tag.get("value");
 			DynamicOps<Tag> jops = ((RegistryOps<E>) ops).withParent(NbtOps.INSTANCE);
 			try {
-				T val = Wrappers.cast(UnifiedCodec.deserializeValue(new TagContext(jops, e -> true), ti, TypeInfo.of(cls), null));
+				T val = Wrappers.cast(UnifiedCodec.deserializeValue(new TagContext(jops, e -> true), ti, TypeInfo.of(cls), input));
 				return DataResult.success(Pair.of(validator.apply(val), input));
 			} catch (Exception e) {
 				LOGGER.throwing(Level.ERROR, e);
@@ -139,7 +152,7 @@ public record CodecAdaptor<T>(Class<T> cls, UnaryOperator<T> validator) implemen
 	}
 
 	public <B extends RegistryFriendlyByteBuf> StreamCodec<B, T> toNetwork() {
-		return StreamCodec.of(PacketCodec::to, (b) -> Objects.requireNonNull(PacketCodec.from(b, cls, null)));
+		return StreamCodec.of(PacketCodec::to, (b) -> Objects.requireNonNull(PacketCodec.from(b, cls, input)));
 	}
 
 }

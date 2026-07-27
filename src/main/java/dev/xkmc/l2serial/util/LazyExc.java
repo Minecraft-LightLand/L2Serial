@@ -2,7 +2,7 @@ package dev.xkmc.l2serial.util;
 
 public class LazyExc<T> {
 
-	private Wrappers.ExcSup<T> factory;
+	private final Wrappers.ExcSup<T> factory;
 	private T value;
 
 	public LazyExc(Wrappers.ExcSup<T> factory) {
@@ -10,9 +10,9 @@ public class LazyExc<T> {
 	}
 
 	public T get() throws Exception {
-		if (factory != null) {
+		if (value != null) return value;
+		synchronized (this) {
 			value = factory.get();
-			factory = null;
 		}
 		return value;
 	}
