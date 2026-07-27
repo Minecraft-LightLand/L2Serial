@@ -50,7 +50,7 @@ public record CodecAdaptor<T>(Class<T> cls, UnaryOperator<T> validator, @Nullabl
 		if (ops.empty() instanceof JsonElement) {
 			DynamicOps<JsonElement> jops = Wrappers.cast(ops);
 			try {
-				T val = Wrappers.cast(UnifiedCodec.deserializeValue(new JsonContext(jops), (JsonElement) input, TypeInfo.of(cls), input));
+				T val = Wrappers.cast(UnifiedCodec.deserializeValue(new JsonContext(jops), (JsonElement) input, TypeInfo.of(cls), this.input));
 				return DataResult.success(Pair.of(validator.apply(val), input));
 			} catch (Exception e) {
 				LOGGER.throwing(Level.ERROR, e);
@@ -60,7 +60,7 @@ public record CodecAdaptor<T>(Class<T> cls, UnaryOperator<T> validator, @Nullabl
 		if (ops.empty() instanceof Tag) {
 			DynamicOps<Tag> jops = Wrappers.cast(ops);
 			try {
-				T val = Wrappers.cast(UnifiedCodec.deserializeValue(new TagContext(jops, e -> true), (Tag) input, TypeInfo.of(cls), input));
+				T val = Wrappers.cast(UnifiedCodec.deserializeValue(new TagContext(jops, e -> true), (Tag) input, TypeInfo.of(cls), this.input));
 				return DataResult.success(Pair.of(validator.apply(val), input));
 			} catch (Exception e) {
 				LOGGER.throwing(Level.ERROR, e);
@@ -72,7 +72,7 @@ public record CodecAdaptor<T>(Class<T> cls, UnaryOperator<T> validator, @Nullabl
 			var ti = tag.get("value");
 			DynamicOps<Tag> jops = ((RegistryOps<E>) ops).withParent(NbtOps.INSTANCE);
 			try {
-				T val = Wrappers.cast(UnifiedCodec.deserializeValue(new TagContext(jops, e -> true), ti, TypeInfo.of(cls), input));
+				T val = Wrappers.cast(UnifiedCodec.deserializeValue(new TagContext(jops, e -> true), ti, TypeInfo.of(cls), this.input));
 				return DataResult.success(Pair.of(validator.apply(val), input));
 			} catch (Exception e) {
 				LOGGER.throwing(Level.ERROR, e);
