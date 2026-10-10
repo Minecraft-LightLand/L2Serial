@@ -19,7 +19,7 @@ public class SetCodec extends GenericCodec {
 	public <C extends UnifiedContext<E, O, A>, E, O extends E, A extends E>
 	Object deserializeValue(C ctx, E e, TypeInfo cls, @Nullable Object ans) throws Exception {
 		A arr = ctx.castAsList(e);
-		TypeInfo com = cls.getGenericType(0);
+		TypeInfo com = cls.getGenericType(Set.class, 0);
 		int n = ctx.getSize(arr);
 		if (ans == null) ans = cls.newInstance();
 		Set list = (Set) ans;
@@ -35,7 +35,7 @@ public class SetCodec extends GenericCodec {
 	E serializeValue(C ctx, TypeInfo cls, @Nullable Object obj) throws Exception {
 		Set<?> list = (Set<?>) obj;
 		A ans = ctx.createList(list.size());
-		TypeInfo com = cls.getGenericType(0);
+		TypeInfo com = cls.getGenericType(Set.class, 0);
 		for (Object o : list) {
 			ctx.addListItem(ans, UnifiedCodec.serializeValue(ctx, com, o));
 		}

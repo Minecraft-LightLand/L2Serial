@@ -24,7 +24,7 @@ public class HolderCodec extends GenericCodec {
 
 	@Override
 	public <C extends UnifiedContext<E, O, A>, E, O extends E, A extends E> Object deserializeValue(C ctx, E e, TypeInfo cls, @Nullable Object ans) throws Exception {
-		var type = cls.getGenericType(0).getAsClass();
+		var type = cls.getGenericType(Holder.class, 0).getAsClass();
 		return ctx.deserializeCodec(Handlers.getReg(type).holder(), e);
 	}
 
@@ -34,7 +34,7 @@ public class HolderCodec extends GenericCodec {
 			Holder<?> holder = (Holder<?>) obj;
 			return ctx.serializeSpecial(ResourceLocation.class, holder.getKey().location());
 		}
-		var type = cls.getGenericType(0).getAsClass();
+		var type = cls.getGenericType(Holder.class, 0).getAsClass();
 		return ctx.serializeCodec(Handlers.getReg(type).holder(), obj);
 	}
 

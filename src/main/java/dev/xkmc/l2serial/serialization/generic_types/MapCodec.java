@@ -23,8 +23,8 @@ public class MapCodec extends GenericCodec {
 	Object deserializeValue(C ctx, E e, TypeInfo cls, @Nullable Object ans) throws Exception {
 		if (ans == null)
 			ans = cls.newInstance();
-		TypeInfo ckey = cls.getGenericType(0);
-		TypeInfo cval = cls.getGenericType(1);
+		TypeInfo ckey = cls.getGenericType(Map.class, 0);
+		TypeInfo cval = cls.getGenericType(Map.class, 1);
 		if (ctx.isListFormat(e)) {
 			A arr = ctx.castAsList(e);
 			int n = ctx.getSize(arr);
@@ -45,8 +45,8 @@ public class MapCodec extends GenericCodec {
 	public <C extends UnifiedContext<E, O, A>, E, O extends E, A extends E>
 	E serializeValue(C ctx, TypeInfo cls, @Nullable Object obj) throws Exception {
 		Map<?, ?> map = (Map<?, ?>) obj;
-		TypeInfo ckey = cls.getGenericType(0);
-		TypeInfo cval = cls.getGenericType(1);
+		TypeInfo ckey = cls.getGenericType(Map.class, 0);
+		TypeInfo cval = cls.getGenericType(Map.class, 1);
 		List<Pair<E, E>> list = new ArrayList<>();
 		A lans = ctx.createList(map.size());
 		boolean can_be_map = true;

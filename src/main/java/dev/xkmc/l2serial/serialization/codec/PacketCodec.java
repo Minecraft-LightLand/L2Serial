@@ -35,7 +35,7 @@ public class PacketCodec {
 	@SuppressWarnings("unchecked")
 	public static <T> T fromBytes(RegistryAccess access, byte[] arr, Class<T> cls, @Nullable T ans, Predicate<SerialField> pred) {
 		var buf = decode(access, arr);
-		return Wrappers.get(() -> (T) UnifiedCodec.deserializeValue(new PacketContext(buf), buf, TypeInfo.of(cls), ans));
+		return Wrappers.get(() -> (T) UnifiedCodec.deserializeValue(new PacketContext(buf, pred), buf, TypeInfo.of(cls), ans));
 	}
 
 	public static <T extends R, R> byte[] toBytes(RegistryAccess access, T obj, Class<R> r, Predicate<SerialField> pred) {
