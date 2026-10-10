@@ -9,7 +9,7 @@ public class LazyExc<T> {
 		this.factory = factory;
 	}
 
-	public T get() throws Exception {
+	public synchronized T get() throws Exception {
 		if (factory != null) {
 			value = factory.get();
 			factory = null;
