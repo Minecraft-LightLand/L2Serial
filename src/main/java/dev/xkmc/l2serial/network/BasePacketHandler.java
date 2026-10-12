@@ -42,8 +42,20 @@ public class BasePacketHandler {
 		return new LoadedPacket<>(type, factory, direction);
 	}
 
+	@SuppressWarnings("unchecked")
 	public <T extends SerialPacketBase> LoadedPacket<T> create(Class<T> type, NetworkDirection direction) {
-		return new LoadedPacket<>(type, (buf) -> SerialPacketBase.serial(type, buf), direction);
+		var base = (Function<FriendlyByteBuf, T>) (Function<FriendlyByteBuf, SerialPacketBase>)
+				buf -> SerialPacketBase.serial(type, buf);
+		Function<FriendlyByteBuf, T> decoder = base;
+		if (direction == NetworkDirection.PLAY_TO_CLIENT)
+			decoder = buf -> {
+				try {
+					return base.apply(buf);
+				} finally {
+					buf.release();
+				}
+			};
+		return new LoadedPacket<>(type, decoder, direction);
 	}
 
 

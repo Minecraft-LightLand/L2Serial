@@ -2,19 +2,19 @@ package dev.xkmc.l2serial.util;
 
 public class LazyExc<T> {
 
-	private Wrappers.ExcSup<T> factory;
-	private T value;
+	private final Wrappers.ExcSup<T> factory;
+	private volatile T value;
 
 	public LazyExc(Wrappers.ExcSup<T> factory) {
 		this.factory = factory;
 	}
 
 	public T get() throws Exception {
-		if (factory != null) {
-			value = factory.get();
-			factory = null;
+		if (value != null) return value;
+		synchronized (this) {
+			if (value == null)
+				value = factory.get();
 		}
-		assert value != null;
 		return value;
 	}
 
