@@ -7,6 +7,7 @@ import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
+import dev.xkmc.l2serial.serialization.marker.SerialField;
 import dev.xkmc.l2serial.serialization.type_cache.TypeInfo;
 import dev.xkmc.l2serial.serialization.unified_processor.JsonContext;
 import dev.xkmc.l2serial.serialization.unified_processor.TagContext;
@@ -139,7 +140,9 @@ public record CodecAdaptor<T>(Class<T> cls, UnaryOperator<T> validator) implemen
 	}
 
 	public <B extends RegistryFriendlyByteBuf> StreamCodec<B, T> toNetwork() {
-		return StreamCodec.of(PacketCodec::to, (b) -> Objects.requireNonNull(PacketCodec.from(b, cls, null)));
+		return StreamCodec.of(
+				(buf, obj) -> PacketCodec.to(buf, obj, Wrappers.cast(obj.getClass()), SerialField::toClient),
+				(b) -> Objects.requireNonNull(PacketCodec.from(b, cls, null, SerialField::toClient)));
 	}
 
 }
