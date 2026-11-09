@@ -28,16 +28,17 @@ import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.registries.RegistryManager;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 public class Handlers {
 
-	public static final Map<Class<?>, JsonClassHandler<?>> JSON_MAP = new HashMap<>();
-	public static final Map<Class<?>, NBTClassHandler<?, ?>> NBT_MAP = new HashMap<>();
-	public static final Map<Class<?>, PacketClassHandler<?>> PACKET_MAP = new HashMap<>();
+	public static final Map<Class<?>, JsonClassHandler<?>> JSON_MAP = new ConcurrentHashMap<>();
+	public static final Map<Class<?>, NBTClassHandler<?, ?>> NBT_MAP = new ConcurrentHashMap<>();
+	public static final Map<Class<?>, PacketClassHandler<?>> PACKET_MAP = new ConcurrentHashMap<>();
 
 	public static final List<GenericCodec> LIST = new ArrayList<>();
-	public static final Map<Class<?>, NullDefer<?>> MAP = new HashMap<>();
+	public static final Map<Class<?>, NullDefer<?>> MAP = new ConcurrentHashMap<>();
 
 	// register handlers
 	static {
