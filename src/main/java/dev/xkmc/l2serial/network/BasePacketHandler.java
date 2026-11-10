@@ -1,5 +1,6 @@
 package dev.xkmc.l2serial.network;
 
+import dev.xkmc.l2serial.serialization.codec.PacketCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -39,7 +40,7 @@ public class BasePacketHandler {
 
 	public <T extends SimplePacketBase> LoadedPacket<T> create(Class<T> type, Function<FriendlyByteBuf, T> factory,
 															   NetworkDirection direction) {
-		return new LoadedPacket<>(type, factory, direction);
+		return new LoadedPacket<>(type, SimplePacketBase::write, factory, direction, SimplePacketBase::handle);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -55,7 +56,20 @@ public class BasePacketHandler {
 					buf.release();
 				}
 			};
-		return new LoadedPacket<>(type, decoder, direction);
+		return new LoadedPacket<>(type, SimplePacketBase::write, decoder, direction, SimplePacketBase::handle);
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T extends RecordPacketBase> LoadedPacket<T> createRecord(Class<T> type, NetworkDirection direction) {
+		Function<FriendlyByteBuf, T> decoder = buf -> {
+			try {
+				return (T) PacketCodec.from(buf, type, null);
+			} finally {
+				if (direction == NetworkDirection.PLAY_TO_CLIENT)
+					buf.release();
+			}
+		};
+		return new LoadedPacket<>(type, RecordPacketBase::write, decoder, direction, RecordPacketBase::handle);
 	}
 
 
@@ -63,7 +77,15 @@ public class BasePacketHandler {
 		channel.sendToServer(packet);
 	}
 
+	public void toServer(RecordPacketBase packet) {
+		channel.sendToServer(packet);
+	}
+
 	public void toTrackingPlayers(SimplePacketBase packet, Entity e) {
+		channel.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> e), packet);
+	}
+
+	public void toTrackingPlayers(RecordPacketBase packet, Entity e) {
 		channel.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> e), packet);
 	}
 
@@ -71,7 +93,15 @@ public class BasePacketHandler {
 		channel.sendTo(packet, e.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
 	}
 
+	public void toClientPlayer(RecordPacketBase packet, ServerPlayer e) {
+		channel.sendTo(packet, e.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+	}
+
 	public void toAllClient(SimplePacketBase packet) {
+		channel.send(PacketDistributor.ALL.noArg(), packet);
+	}
+
+	public void toAllClient(RecordPacketBase packet) {
 		channel.send(PacketDistributor.ALL.noArg(), packet);
 	}
 
@@ -92,7 +122,7 @@ public class BasePacketHandler {
 			packet.apply(this).register();
 	}
 
-	public class LoadedPacket<T extends SimplePacketBase> {
+	public class LoadedPacket<T> {
 
 		private final BiConsumer<T, FriendlyByteBuf> encoder;
 		private final Function<FriendlyByteBuf, T> decoder;
@@ -100,10 +130,11 @@ public class BasePacketHandler {
 		private final Class<T> type;
 		private final NetworkDirection direction;
 
-		private LoadedPacket(Class<T> type, Function<FriendlyByteBuf, T> factory, NetworkDirection direction) {
-			encoder = T::write;
+		private LoadedPacket(Class<T> type, BiConsumer<T, FriendlyByteBuf> encoder, Function<FriendlyByteBuf, T> factory,
+							 NetworkDirection direction, BiConsumer<T, Supplier<NetworkEvent.Context>> handler) {
+			this.encoder = encoder;
 			decoder = factory;
-			handler = T::handle;
+			this.handler = handler;
 			this.type = type;
 			this.direction = direction;
 		}
